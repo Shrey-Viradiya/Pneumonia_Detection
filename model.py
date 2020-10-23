@@ -36,7 +36,7 @@ class CoronaDetection():
                 torch.nn.Dropout(),
                 torch.nn.Linear(500, 2)
             )
-            torch.save('./model/ConvModel')
+            torch.save(self.model, './model/ConvModel')
 
     def train(self, optimizer, loss_fun, train_data ,test_data, epochs = 20, device = 'cuda'):
         '''
@@ -67,7 +67,7 @@ class CoronaDetection():
                 train_images, train_labels = batch
                 train_images = train_images.to(device)
                 train_labels = train_labels.to(device)
-
+                
                 optimizer.zero_grad()
                 output = self.model(train_images)
                 loss = loss_fun(output, train_labels)

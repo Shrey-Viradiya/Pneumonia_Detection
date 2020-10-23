@@ -2,12 +2,14 @@ import torch
 import torchvision
 from model import *
 
+print("Corona Detection Project")
 img_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.RandomCrop((256,256)),
+    torchvision.transforms.RandomCrop((64,64)),
     torchvision.transforms.RandomHorizontalFlip(),
     torchvision.transforms.ToTensor(),
     ])
 
+print("Setting up Data Directories")
 train_data_path = "./data/Corona_Classification_data/train/"
 train_data = torchvision.datasets.ImageFolder(root=train_data_path,transform=img_transforms)
 
@@ -18,8 +20,6 @@ batch_size=32
 
 train_data_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
 test_data_loader  = torch.utils.data.DataLoader(test_data  , batch_size=batch_size, shuffle=True)
-
-
 
 if torch.cuda.is_available():
     print("Using GPU")
