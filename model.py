@@ -42,12 +42,10 @@ class CoronaDetection():
         '''
         Train function:
         parameters:
-        model       : PyTorch Model
         optimizer   : optimizer object
         loss_fun    : Loss Function object
-        train_data  : CIFAR10 train dataloader
-        test_data   : CIFAR10 test  dataloader
-        batch_size  : default value 100
+        train_data  : train dataloader
+        test_data   : test  dataloader
         epochs      : default value 20
         device      : 'cuda' or 'cpu', default 'cuda'
         '''
