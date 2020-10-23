@@ -50,6 +50,8 @@ class CoronaDetection():
         device      : 'cuda' or 'cpu', default 'cuda'
         '''
 
+        self.model.to(device)
+
         max_accurracy = 0.0
 
         for epoch in range(epochs):
