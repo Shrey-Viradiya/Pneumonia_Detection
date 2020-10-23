@@ -15,6 +15,4 @@ Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xray
     - kaggle module will look for this token at ```~/.kaggle/kaggle.json``` on Linux, OSX, and other UNIX-based operating systems, and at ```C:\Users\<Windows-username>\.kaggle\kaggle.json``` on Windows.
     - execute ```python data.py```
 
-- run train.py to train from the dataset
-
-- run test.py to test the model
+- run main.py to train from the dataset
