@@ -6,7 +6,7 @@ workflows:
         name: "Corona"
         command: experiment.run_single_node
         params:
-          command: python data.py & python main.py
+          command: nvidia-smi
           container: paperspace/dl-containers:pytorch-py36-cu100-jupyter
           experimentEnv:
             EPOCHS_EVAL: 5
@@ -16,7 +16,7 @@ workflows:
           machineType: p2.xlarge
           modelPath: /artifacts
           modelType: PyTorch
-          name: gradientci-sample
+          name: Corona-cli-config
           clusterId: clbdo1h0q
         checks: #[optional]
           tensorflow:loss:
