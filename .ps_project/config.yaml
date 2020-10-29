@@ -6,7 +6,7 @@ workflows:
         name: "Corona"
         command: experiment.run_single_node
         params:
-          command: nvidia-smi
+          command: python data.py & python main.py
           container: paperspace/dl-containers:pytorch-py36-cu100-jupyter
           experimentEnv:
             EPOCHS_EVAL: 5
