@@ -14,7 +14,7 @@ workflows:
             MAX_STEPS: 1000
             TRAIN_EPOCHS: 20
           machineType: p2.xlarge
-          modelPath: /model
+          modelPath: /artifacts
           modelType: PyTorch
           name: gradientci-sample
           clusterId: clbdo1h0q
