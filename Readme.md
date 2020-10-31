@@ -16,3 +16,15 @@ Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xray
     - execute ```python data.py```
 
 - run main.py to train from the dataset
+
+    - To change pretrained base model, give input while initializing the model object.  Use values from 
+        - ResNet18 
+        - Alexnet 
+        - VGG16
+        - DenseNet161
+        - GoogleNet
+        - Inception
+
+- To test new dataset, run test.py with directory path and base model with option given above. Make sure that model is trained on those models first. 
+
+    Example, ```python3 test.py "./data/Corona_Classification_data/test/" ResNet18``` 
