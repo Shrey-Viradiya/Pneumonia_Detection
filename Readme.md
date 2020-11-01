@@ -9,7 +9,8 @@ Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xray
 - Install required packages from requirements.txt
 
 - You can download, extract and move the data according to the label using data.py
-
+    - pip install kaggle
+    - homepage www.kaggle.com -> My Account -> Create New API token and save it in ```~/.kaggle``` folder.
     - Download Kaggle API key from your Kaggle Account.
     - Place it in the appropriate place according to the OS.
     - kaggle module will look for this token at ```~/.kaggle/kaggle.json``` on Linux, OSX, and other UNIX-based operating systems, and at ```C:\Users\<Windows-username>\.kaggle\kaggle.json``` on Windows.
