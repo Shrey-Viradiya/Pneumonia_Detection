@@ -2,12 +2,17 @@ import os
 import shutil
 import pandas as pd
 
-if not os.path.exists('./data/coronahack-chest-xraydataset.zip'):
-    os.system('kaggle datasets download -d praveengovi/coronahack-chest-xraydataset')
-else:
-    print("Download found....")
+if not os.path.exists("./data"):
+    os.mkdir("./data")
 
-print("Strating Extraction")
+if not os.path.exists('./data/coronahack-chest-xraydataset.zip'):
+    os.chdir("./data")
+    os.system('kaggle datasets download -d praveengovi/coronahack-chest-xraydataset')
+    os.chdir("..")
+else:
+    print("Download found...")
+
+print("Starting Extraction")
 os.system('tar -xf "./data/coronahack-chest-xraydataset.zip" --directory "./data/" ')
 print("Extraction Complete")
 
