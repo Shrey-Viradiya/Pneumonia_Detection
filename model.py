@@ -7,7 +7,11 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import skimage.transform
 
+
 class bcolors:
+    """
+    Class for colored output
+    """
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
@@ -17,6 +21,8 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+# Dictionary for pretrained models and their last layer name
+
 pretrained_models = {
     'ResNet18': [torchvision.models.resnet18,'layer4'],
     'Alexnet' : [torchvision.models.alexnet,'features'],
@@ -25,6 +31,10 @@ pretrained_models = {
     'GoogleNet' : [torchvision.models.googlenet,'inception5b'],
     'Inception' : [torchvision.models.inception_v3,'Mixed_7c']
 }
+
+
+
+# Different image transformations for training, testing and displaying
 
 img_train_transforms = torchvision.transforms.Compose([
     torchvision.transforms.RandomCrop((64,64)),
@@ -44,6 +54,9 @@ img_test_transforms = torchvision.transforms.Compose([
                                  std=[0.229, 0.224, 0.225])
     ])
 
+
+# The main model object
+
 class CoronaDetection():
     """
     Model Architecture and Forward Training Path for the Corona Detection
@@ -52,21 +65,33 @@ class CoronaDetection():
     """
     def __init__(self, base_model = 'ResNet18'):
         assert base_model in ['ResNet18', 'Alexnet', 'VGG16', 'DenseNet161', 'GoogleNet', 'Inception']
+
+        # saving base model name to use it in saving the model
         self.base_model = base_model
+
         if os.path.exists(f'./model/ConvModel_{self.base_model}'):
+            # check if the model is intialized before
             self.model = torch.load(f'./model/ConvModel_{self.base_model}')
         else:
+            # If not initialized before
+            # Download it and save it
             self.model = pretrained_models[self.base_model][0](pretrained=True)
             for name, param in self.model.named_parameters():
-                if "bn" not in name:
-                    param.requires_grad = False
+                param.requires_grad = True
+            
+            # Modify last Fully Connected layer to predict for
+            # Our requirements
             self.model.fc = torch.nn.Sequential(
                 torch.nn.Linear(self.model.fc.in_features, 500),
                 torch.nn.ReLU(),
                 torch.nn.Dropout(),
                 torch.nn.Linear(500, 2)
             )
+
+            # Save model
             torch.save(self.model, f'./model/ConvModel_{self.base_model}')
+        
+        # get final model for using it in Class Activation Map
         self.final_layer = self.model._modules.get(pretrained_models[self.base_model][1])
 
     def train(self, optimizer, loss_fun, train_data ,test_data, epochs = 20, early_stopping_threshold = 4, device = 'cuda'):
@@ -82,6 +107,7 @@ class CoronaDetection():
         device      : 'cuda' or 'cpu', default 'cuda'
         '''
 
+        # transfer model to device available
         self.model.to(device)
 
         max_accurracy = 0.0
@@ -95,6 +121,8 @@ class CoronaDetection():
             self.model.train()
             correct = 0 
             total = 0
+
+            # Training over batches
             for batch in train_data:
                 train_images, train_labels = batch
                 train_images = train_images.to(device)
@@ -111,12 +139,17 @@ class CoronaDetection():
                 correct += (predicted == train_labels).sum().item()
             training_accuracy = correct/total * 100
 
+
+            # Start evaluating
             self.model.eval()
             correct = 0 
             total = 0
             previous_accuracy = 0.0
             misses = 0
+
+            # Without changing parameters
             with torch.no_grad():
+                # Testing over batches
                 for batch in test_data:
                     test_images, test_labels = batch
                     test_images = test_images.to(device)
@@ -131,6 +164,8 @@ class CoronaDetection():
             testing_accuracy = correct/total * 100
 
             time_taken = time.time() - start
+
+            # Save if it is better model than max_accuracy
             if (testing_accuracy > max_accurracy):
                     max_accurracy = testing_accuracy
                     torch.save(self.model, f'./model/ConvModel_{self.base_model}')
@@ -146,6 +181,7 @@ class CoronaDetection():
                             f'Time Taken: {time_taken} seconds'
                         ])
 
+            # Decide and stop early if needed
             if previous_accuracy > testing_accuracy and misses < early_stopping_threshold:
                 misses += 1
                 previous_accuracy = testing_accuracy
@@ -163,7 +199,10 @@ class CoronaDetection():
         test_loss = 0.0
         correct = 0 
         total = 0
+
+        # Without changing parameters
         with torch.no_grad():
+            # Testing over batches
             for batch in test_data:
                 test_images, test_labels = batch
                 test_images = test_images.to(device)
@@ -180,6 +219,11 @@ class CoronaDetection():
         print(f'{bcolors.OKGREEN}Test Loss:{bcolors.ENDC} {test_loss:.5f}, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time.time() - start:.2f} s')
 
     def CAM(self, image_path_input, overlay_path_output):
+        """
+        CAM - Class Activation Map
+        """
+
+        # open image
         image = Image.open(image_path_input)
 
         tensor = img_test_transforms(image)
