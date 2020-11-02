@@ -11,7 +11,7 @@ else:
     device = torch.device("cpu")
 
 test_data_path = sys.argv[1]
-test_data = torchvision.datasets.ImageFolder(root=test_data_path,transform=img_transforms)
+test_data = torchvision.datasets.ImageFolder(root=test_data_path,transform=img_test_transforms)
 batch_size=32
 test_data_loader  = torch.utils.data.DataLoader(test_data  , batch_size=batch_size, shuffle=True)
 
