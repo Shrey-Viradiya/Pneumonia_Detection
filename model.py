@@ -2,6 +2,10 @@ import torch
 import os
 import time
 import torchvision
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+import skimage.transform
 
 class bcolors:
     HEADER = '\033[95m'
@@ -14,17 +18,27 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 pretrained_models = {
-    'ResNet18': torchvision.models.resnet18,
-    'Alexnet' : torchvision.models.alexnet,
-    'VGG16' : torchvision.models.vgg16_bn,
-    'DenseNet201' : torchvision.models.densenet201,
-    'GoogleNet' : torchvision.models.googlenet,
-    'Inception' : torchvision.models.inception_v3
+    'ResNet18': [torchvision.models.resnet18,'layer4'],
+    'Alexnet' : [torchvision.models.alexnet,'features'],
+    'VGG16' : [torchvision.models.vgg16_bn,'features'],
+    'DenseNet201' : [torchvision.models.densenet201,'denseblock4'],
+    'GoogleNet' : [torchvision.models.googlenet,'inception5b'],
+    'Inception' : [torchvision.models.inception_v3,'Mixed_7c']
 }
 
-img_transforms = torchvision.transforms.Compose([
+img_train_transforms = torchvision.transforms.Compose([
     torchvision.transforms.RandomCrop((64,64)),
     torchvision.transforms.RandomHorizontalFlip(),
+    torchvision.transforms.ToTensor(),
+    torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+    ])
+
+display_transform = torchvision.transforms.Compose([
+        torchvision.transforms.Resize((64,64))])
+
+img_test_transforms = torchvision.transforms.Compose([
+    torchvision.transforms.RandomCrop((64,64)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -42,8 +56,7 @@ class CoronaDetection():
         if os.path.exists(f'./model/ConvModel_{self.base_model}'):
             self.model = torch.load(f'./model/ConvModel_{self.base_model}')
         else:
-
-            self.model = pretrained_models[self.base_model](pretrained=True)
+            self.model = pretrained_models[self.base_model][0](pretrained=True)
             for name, param in self.model.named_parameters():
                 if "bn" not in name:
                     param.requires_grad = False
@@ -54,6 +67,7 @@ class CoronaDetection():
                 torch.nn.Linear(500, 2)
             )
             torch.save(self.model, f'./model/ConvModel_{self.base_model}')
+        self.final_layer = self.model._modules.get(pretrained_models[self.base_model][1])
 
     def train(self, optimizer, loss_fun, train_data ,test_data, epochs = 20, early_stopping_threshold = 4, device = 'cuda'):
         '''
@@ -164,3 +178,53 @@ class CoronaDetection():
         testing_accuracy = correct/total * 100
 
         print(f'{bcolors.OKGREEN}Test Loss:{bcolors.ENDC} {test_loss:.5f}, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time.time() - start:.2f} s')
+
+    def CAM(self, image_path_input, overlay_path_output):
+        image = Image.open(image_path_input)
+
+        tensor = img_test_transforms(image)
+
+        prediction_var = torch.autograd.Variable((tensor.unsqueeze(0)).cuda(), requires_grad=True)
+
+        self.model.eval()
+
+        class SaveFeatures():
+            features=None
+            def __init__(self, m): self.hook = m.register_forward_hook(self.hook_fn)
+            def hook_fn(self, module, input, output): self.features = ((output.cpu()).data).numpy()
+            def remove(self): self.hook.remove()
+
+        final_layer = self.model._modules.get('layer4')
+
+        activated_features = SaveFeatures(final_layer)
+
+        prediction = self.model(prediction_var)
+
+        pred_probabilities = torch.nn.functional.softmax(prediction, dim = 0).data.squeeze()
+
+        activated_features.remove()
+
+        torch.topk(pred_probabilities,1)
+
+        def getCAM(feature_conv, weight_fc, class_idx):
+            _, nc, h, w = feature_conv.shape
+            cam = weight_fc[class_idx].dot(feature_conv.reshape((nc, h*w)))
+            cam = cam.reshape(h, w)
+            cam = cam - np.min(cam)
+            cam_img = cam / np.max(cam)
+            return [cam_img]
+
+        weight_softmax_params = list(self.model._modules.get('fc').parameters())
+        weight_softmax = np.squeeze(weight_softmax_params[0].cpu().data.numpy())
+
+        class_idx = torch.topk(pred_probabilities,1)[1].int()
+
+        overlay = getCAM(activated_features.features, weight_softmax, class_idx )
+
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.imshow(display_transform(image))
+        plt.subplot(1,2,2)
+        plt.imshow(display_transform(image))
+        plt.imshow(skimage.transform.resize(overlay[0], tensor.shape[1:3]), alpha=0.4, cmap='jet')
+        plt.savefig(overlay_path_output)
