@@ -81,16 +81,18 @@ class CoronaDetection():
             
             # Modify last Fully Connected layer to predict for
             # Our requirements
-            if self.base_model in ['Alexnet', 'VGG16','DenseNet161',]:
-                self.model.classifier = torch.nn.Sequential(
-                torch.nn.Linear(512*512*3, 500),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(),
-                torch.nn.Linear(500, 2)
-                )
+            if self.base_model in ['Alexnet', 'VGG16']:
+                num_ftrs = self.model.classifier[6].in_features
+                self.model.classifier[6] = torch.nn.Linear(num_ftrs, 2)
+            elif self.base_model == 'DenseNet':
+                num_ftrs = self.model.classifier.in_features
+                self.model.classifier = torch.nn.Linear(num_ftrs, 2)
+            elif self.base_model in ['GoogleNet','Inception'] :
+                num_ftrs = self.model.fc.in_features
+                self.model.fc = torch.nn.Linear(num_ftrs, 2)
             else:
                 self.model.fc = torch.nn.Sequential(
-                    torch.nn.Linear(512*512*3, 500),
+                    torch.nn.Linear(self.model.fc.in_features, 500),
                     torch.nn.ReLU(),
                     torch.nn.Dropout(),
                     torch.nn.Linear(500, 2)
