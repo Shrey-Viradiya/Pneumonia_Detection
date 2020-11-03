@@ -37,7 +37,7 @@ pretrained_models = {
 # Different image transformations for training, testing and displaying
 
 img_train_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.RandomCrop((64,64)),
+    torchvision.transforms.Resize((512,512)),
     torchvision.transforms.RandomHorizontalFlip(),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -45,10 +45,10 @@ img_train_transforms = torchvision.transforms.Compose([
     ])
 
 display_transform = torchvision.transforms.Compose([
-        torchvision.transforms.Resize((64,64))])
+        torchvision.transforms.Resize((512,512))])
 
 img_test_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.RandomCrop((64,64)),
+    torchvision.transforms.Resize((512,512)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -85,7 +85,7 @@ class CoronaDetection():
                 torch.nn.Linear(self.model.fc.in_features, 500),
                 torch.nn.ReLU(),
                 torch.nn.Dropout(),
-                torch.nn.Linear(500, 2)
+                torch.nn.Linear(500, 4)
             )
 
             # Save model
