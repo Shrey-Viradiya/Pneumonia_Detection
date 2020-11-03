@@ -2,9 +2,8 @@ import os
 import shutil
 import sys
 import pandas as pd
-import numpy as np
-from PIL import Image
 from preprocessor import *
+import platform
 
 if not os.path.exists("./data"):
     os.mkdir("./data")
@@ -17,7 +16,11 @@ else:
     print("Download found...")
 
 print("Starting Extraction")
-os.system('tar -xf "./data/coronahack-chest-xraydataset.zip" --directory "./data/" ')
+print(platform.system())
+if platform.system() in ["Linux","Darwin"]:    
+    os.system('unzip "./data/coronahack-chest-xraydataset.zip" -d "./data/"')
+else:
+    os.system('tar -xf "./data/coronahack-chest-xraydataset.zip" --directory "./data/" ')
 print("Extraction Complete")
 
 print("Reading Metadata")
