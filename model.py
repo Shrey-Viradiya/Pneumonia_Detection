@@ -85,7 +85,7 @@ class CoronaDetection():
                 torch.nn.Linear(self.model.fc.in_features, 500),
                 torch.nn.ReLU(),
                 torch.nn.Dropout(),
-                torch.nn.Linear(500, 4)
+                torch.nn.Linear(500, 2)
             )
 
             # Save model
