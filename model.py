@@ -174,7 +174,10 @@ class CoronaDetection():
                         f.writelines([
                             f'BaseModel: {self.base_model}\n',
                             f'Epochs: {epoch + 1}\n',
-                            f'Training Loss:: {training_loss}\n',
+                            f'Train Dataloader Batch Size: {train_data.batch_size}\n',
+                            f'Test Dataloader Batch Size: {test_data.batch_size}\n',
+                            f'Params for Adam: {optimizer.__dict__["defaults"]}',
+                            f'Training Loss: {training_loss}\n',
                             f'Validation Loss: {valid_loss}\n',
                             f'Training Accuracy: {training_accuracy}\n',
                             f'Testing Accuracy: {testing_accuracy}\n',
