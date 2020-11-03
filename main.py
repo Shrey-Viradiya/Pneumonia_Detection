@@ -12,7 +12,7 @@ train_data = torchvision.datasets.ImageFolder(root=train_data_path,transform=img
 test_data_path = "./data/Corona_Classification_data/test/"
 test_data = torchvision.datasets.ImageFolder(root=test_data_path,transform=img_test_transforms)
 
-batch_size = 32
+batch_size = 1
 
 train_data_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
 test_data_loader  = torch.utils.data.DataLoader(test_data  , batch_size=batch_size, shuffle=True)
@@ -27,7 +27,6 @@ else:
 print("Creating Model Object: ")
 model = CoronaDetection(sys.argv[1])
 optimizer = torch.optim.Adam(model.model.parameters(), lr=0.00005)
-print()
 
 print("Starting Training")
 model.train(optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, test_data_loader, epochs=25, device=device)
