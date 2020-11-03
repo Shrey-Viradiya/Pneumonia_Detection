@@ -83,14 +83,14 @@ class CoronaDetection():
             # Our requirements
             if self.base_model in ['Alexnet', 'VGG16','DenseNet161',]:
                 self.model.classifier = torch.nn.Sequential(
-                torch.nn.Linear(self.model.fc.in_features, 500),
+                torch.nn.Linear(512*512*3, 500),
                 torch.nn.ReLU(),
                 torch.nn.Dropout(),
                 torch.nn.Linear(500, 2)
                 )
             else:
                 self.model.fc = torch.nn.Sequential(
-                    torch.nn.Linear(self.model.fc.in_features, 500),
+                    torch.nn.Linear(512*512*3, 500),
                     torch.nn.ReLU(),
                     torch.nn.Dropout(),
                     torch.nn.Linear(500, 2)
