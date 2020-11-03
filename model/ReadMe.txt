@@ -1,1 +1,0 @@
-This Directory contained saved models, parameters details and their results
