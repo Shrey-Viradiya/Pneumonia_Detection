@@ -1,2 +1,7 @@
 stay_healthy
 data
+__pycache__
+*.pyc
+env/
+venv/
+.vscode
