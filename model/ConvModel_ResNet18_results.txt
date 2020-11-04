@@ -1,1 +1,0 @@
-BaseModel: ResNet18Epochs: 2Training Loss:: 56.047282084822655Validation Loss: 16.13262042403221Training Accuracy: 85.47105561861521Testing Accuracy: 63.62179487179487Time Taken: 224.60084795951843 seconds
