@@ -122,6 +122,10 @@ class CoronaDetection():
         self.model.to(device)
 
         max_accurracy = 0.0
+        train_losses       = []
+        test_losses        = []
+        train_accuracies   = []
+        test_accuracies    = []
 
         for epoch in range(epochs):
             start = time.time()
@@ -202,6 +206,11 @@ class CoronaDetection():
 
             print(f"Epoch {epoch+1} \t Training Loss => {training_loss:.4f} \t Training Acc => {training_accuracy:.2f} \t Test Loss => {valid_loss:.4f} \t Test Acc => {testing_accuracy:.2f} \t Time Taken : {time_taken:.2f}")
 
+            train_losses.append(training_loss)
+            test_losses.append(valid_loss)
+            train_accuracies.append(training_accuracy)
+            test_accuracies.append(testing_accuracy)
+            
             # Save if it is better model than max_accuracy
             if (testing_accuracy > max_accurracy):
                     max_accurracy = testing_accuracy
@@ -231,6 +240,8 @@ class CoronaDetection():
                     print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
                     break
             previous_accuracy = testing_accuracy
+
+        return train_losses, train_accuracies, test_losses, test_accuracies
 
     def test(self, loss_fun, test_data, device = 'cuda'):
         print("Starting Evaluating....")
