@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
 
+
 def image_center_crop(path):
     """
     Makes a square center crop of an img, which is a [h, w, 3] numpy array.
@@ -19,13 +20,22 @@ def image_center_crop(path):
     else:
         h, w = shape
 
-    h_crop = min(h,w)
+    h_crop = min(h, w)
 
     if dim == 3:
-        cropped_img = img[..., (h//2-h_crop//2):(h//2+h_crop//2), (w//2-h_crop//2):(w//2+h_crop//2), :]
-        image = Image.fromarray(cropped_img, 'RGB')
+        cropped_img = img[
+            ...,
+            (h // 2 - h_crop // 2) : (h // 2 + h_crop // 2),
+            (w // 2 - h_crop // 2) : (w // 2 + h_crop // 2),
+            :,
+        ]
+        image = Image.fromarray(cropped_img, "RGB")
     else:
-        cropped_img = img[..., (h//2-h_crop//2):(h//2+h_crop//2), (w//2-h_crop//2):(w//2+h_crop//2)]
+        cropped_img = img[
+            ...,
+            (h // 2 - h_crop // 2) : (h // 2 + h_crop // 2),
+            (w // 2 - h_crop // 2) : (w // 2 + h_crop // 2),
+        ]
         image = Image.fromarray(cropped_img)
-    
+
     image.save(path)
