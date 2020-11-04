@@ -25,6 +25,7 @@ class bcolors:
 
 pretrained_models = {
     'ResNet18': [torchvision.models.resnet18,'layer4'],
+    'ResNet50': [torchvision.models.resnet50, 'layer4'],
     'Alexnet' : [torchvision.models.alexnet,'features'],
     'VGG16' : [torchvision.models.vgg16_bn,'features'],
     'DenseNet201' : [torchvision.models.densenet201,'denseblock4'],
@@ -67,7 +68,7 @@ class CoronaDetection():
     Idea is to use transfer Learning
     """
     def __init__(self, base_model = 'ResNet18'):
-        assert base_model in ['ResNet18', 'Alexnet', 'VGG16', 'DenseNet161', 'GoogleNet', 'Inception']
+        assert base_model in ['ResNet18', 'ResNet50', 'Alexnet', 'VGG16', 'DenseNet161', 'GoogleNet', 'Inception']
 
         # saving base model name to use it in saving the model
         self.base_model = base_model
@@ -90,9 +91,6 @@ class CoronaDetection():
             elif self.base_model == 'DenseNet':
                 num_ftrs = self.model.classifier.in_features
                 self.model.classifier = torch.nn.Linear(num_ftrs, 2)
-            elif self.base_model in ['GoogleNet','Inception'] :
-                num_ftrs = self.model.fc.in_features
-                self.model.fc = torch.nn.Linear(num_ftrs, 2)
             else:
                 self.model.fc = torch.nn.Sequential(
                     torch.nn.Linear(self.model.fc.in_features, 500),
