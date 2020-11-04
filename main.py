@@ -12,7 +12,7 @@ train_data = torchvision.datasets.ImageFolder(root=train_data_path,transform=img
 test_data_path = "./data/Corona_Classification_data/test/"
 test_data = torchvision.datasets.ImageFolder(root=test_data_path,transform=img_test_transforms)
 
-batch_size = 1
+batch_size = int(sys.argv[3])
 
 train_data_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
 test_data_loader  = torch.utils.data.DataLoader(test_data  , batch_size=batch_size, shuffle=True)
