@@ -18,7 +18,7 @@ else:
 print("Starting Extraction")
 print(platform.system())
 if platform.system() in ["Linux","Darwin"]:    
-    os.system('unzip "./data/coronahack-chest-xraydataset.zip" -d "./data/"')
+    os.system('unzip -q "./data/coronahack-chest-xraydataset.zip" -d "./data/"')
 else:
     os.system('tar -xf "./data/coronahack-chest-xraydataset.zip" --directory "./data/" ')
 print("Extraction Complete")
