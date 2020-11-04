@@ -65,7 +65,6 @@ img_test_transforms = torchvision.transforms.Compose([
 class CoronaDetection():
     """
     Model Architecture and Forward Training Path for the Corona Detection
-
     Idea is to use transfer Learning
     """
     def __init__(self, base_model = 'ResNet18'):
@@ -123,94 +122,130 @@ class CoronaDetection():
         self.model.to(device)
 
         max_accurracy = 0.0
+        train_losses       = []
+        test_losses        = []
+        train_accuracies   = []
+        test_accuracies    = []
 
-        for epoch in range(epochs):
-            start = time.time()
+        try:
+            for epoch in range(epochs):
+                start = time.time()
 
-            training_loss = 0.0
-            valid_loss    = 0.0
-            
-            train_correct = 0 
-            train_total   = 0
-            test_correct  = 0 
-            test_total    = 0
-            misses        = 0
-            previous_accuracy = 0
-            # Training over batches
-            for train_batch, test_batch in zip(train_data, test_data):
-                train_images, train_labels = train_batch
-                test_images , test_labels  = test_batch
-                train_images = train_images.to(device)
-                train_labels = train_labels.to(device)
-                test_images  = test_images.to(device)
-                test_labels  = test_labels.to(device)
+                training_loss = 0.0
+                valid_loss    = 0.0
                 
-                optimizer.zero_grad()
-                train_output = self.model(train_images)
-                if self.base_model == 'Inception':
-                    train_loss = loss_fun(train_output.logits, train_labels)
-                    train_loss.backward()
-                    optimizer.step()
-                    training_loss      += train_loss.item()
-                    _, train_predicted  = torch.max(train_output.logits.data, 1)
-                else:
-                    train_loss = loss_fun(train_output, train_labels)
-                    train_loss.backward()
-                    optimizer.step()
-                    training_loss      += train_loss.item()
-                    _, train_predicted  = torch.max(train_output.data, 1)
+                train_correct = 0 
+                train_total   = 0
+                test_correct  = 0 
+                test_total    = 0
+                misses        = 0
+                previous_accuracy = 0
+                # Training over batches
+                for train_batch, test_batch in zip(train_data, test_data):
+                    train_images, train_labels = train_batch
+                    test_images , test_labels  = test_batch
+                    train_images = train_images.to(device)
+                    train_labels = train_labels.to(device)
+                    test_images  = test_images.to(device)
+                    test_labels  = test_labels.to(device)
+                    
+                    optimizer.zero_grad()
+                    train_output = self.model(train_images)
+                    if self.base_model == 'Inception':
+                        train_loss = loss_fun(train_output.logits, train_labels)
+                        train_loss.backward()
+                        optimizer.step()
+                        training_loss      += train_loss.item()
+                        _, train_predicted  = torch.max(train_output.logits.data, 1)
+                    else:
+                        train_loss = loss_fun(train_output, train_labels)
+                        train_loss.backward()
+                        optimizer.step()
+                        training_loss      += train_loss.item()
+                        _, train_predicted  = torch.max(train_output.data, 1)
+                    
+                    train_total        += train_labels.size(0)
+                    train_ccount        = (train_predicted == train_labels).sum().item()
+                    train_correct      += train_ccount
+
+                    with torch.no_grad():
+                        test_output        = self.model(test_images)
+                        test_loss          = loss_fun(test_output,test_labels) 
+                        valid_loss        += test_loss.item()
+                        _, test_predicted  = torch.max(test_output.data, 1)
+                        test_total        += test_labels.size(0)
+                        test_ccount        = (test_predicted == test_labels).sum().item()
+                        test_correct      += test_ccount
+                    
+                    sys.stdout.write(f"\rEpoch {epoch+1} \t Training Loss => {train_loss:.4f} \t Training Acc => {train_ccount/train_images.shape[0]*100:.2f} \t Test Loss => {test_loss:.4f} \t Test Acc => {test_ccount/test_images.shape[0]*100:.2f}")
                 
-                train_total        += train_labels.size(0)
-                train_ccount        = (train_predicted == train_labels).sum().item()
-                train_correct      += train_ccount
+                training_accuracy = train_correct/train_total * 100
+
+                valid_loss    = 0.0
+                test_correct  = 0 
+                test_total    = 0
+                misses        = 0
 
                 with torch.no_grad():
-                    test_output        = self.model(test_images)
-                    test_loss          = loss_fun(test_output,test_labels) 
-                    valid_loss        += test_loss.item()
-                    _, test_predicted  = torch.max(test_output.data, 1)
-                    test_total        += test_labels.size(0)
-                    test_ccount        = (test_predicted == test_labels).sum().item()
-                    test_correct      += test_ccount
+                    for test_batch in test_data:
+                        test_images , test_labels  = test_batch
+                        test_images  = test_images.to(device)
+                        test_labels  = test_labels.to(device)
+                        test_output        = self.model(test_images)
+                        test_loss          = loss_fun(test_output,test_labels)
+                        valid_loss        += test_loss.item()
+                        _, test_predicted  = torch.max(test_output.data, 1)
+                        test_total        += test_labels.size(0)
+                        test_ccount        = (test_predicted == test_labels).sum().item()
+                        test_correct      += test_ccount
+                testing_accuracy  = test_correct /test_total  * 100
+
+                sys.stdout.flush()
+                sys.stdout.write("\r")
+
+                time_taken = time.time() - start
+
+                print(f"Epoch {epoch+1} \t Training Loss => {training_loss:.4f} \t Training Acc => {training_accuracy:.2f} \t Test Loss => {valid_loss:.4f} \t Test Acc => {testing_accuracy:.2f} \t Time Taken : {time_taken:.2f}")
+
+                train_losses.append(training_loss)
+                test_losses.append(valid_loss)
+                train_accuracies.append(training_accuracy)
+                test_accuracies.append(testing_accuracy)
                 
-                sys.stdout.write(f"\rEpoch {epoch+1} \t Training Loss => {train_loss:.4f} \t Training Acc => {train_ccount/train_images.shape[0]:.2f} \t Test Loss => {test_loss:.4f} \t Test Acc => {test_ccount/test_images.shape[0]:.2f}")
-            
-            training_accuracy = train_correct/train_total * 100
-            testing_accuracy  = test_correct /test_total  * 100
+                # Save if it is better model than max_accuracy
+                if (testing_accuracy > max_accurracy):
+                        max_accurracy = testing_accuracy
+                        torch.save(self.model, f'./model/ConvModel_{self.base_model}')
 
-            print()
+                        with open( f'./model/ConvModel_{self.base_model}_results.txt','w') as f:
+                            f.writelines([
+                                f'BaseModel: {self.base_model}\n',
+                                f'Epochs: {epoch + 1}\n',
+                                f'Train Dataloader Batch Size: {train_data.batch_size}\n',
+                                f'Test Dataloader Batch Size: {test_data.batch_size}\n',
+                                f'Params for Adam: {optimizer.__dict__["defaults"]}',
+                                f'Training Loss: {training_loss}\n',
+                                f'Validation Loss: {valid_loss}\n',
+                                f'Training Accuracy: {training_accuracy}\n',
+                                f'Testing Accuracy: {testing_accuracy}\n',
+                                f'Time Taken: {time_taken} seconds'
+                            ])
 
-            time_taken = time.time() - start
+                # Decide and stop early if needed
+                if epoch >= 1:
+                    if previous_accuracy > testing_accuracy and misses < early_stopping_threshold:
+                        misses += 1
+                        previous_accuracy = testing_accuracy
+                    elif previous_accuracy > testing_accuracy:
+                        print(f"{bcolors.WARNING}Early Stopping....{bcolors.ENDC}")
+                        print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
+                        break
+                previous_accuracy = testing_accuracy
+        except KeyboardInterrupt:
+            print("Force Stopping Model Training...")
+            return train_losses, train_accuracies, test_losses, test_accuracies 
 
-            # Save if it is better model than max_accuracy
-            if (testing_accuracy > max_accurracy):
-                    max_accurracy = testing_accuracy
-                    torch.save(self.model, f'./model/ConvModel_{self.base_model}')
-
-                    with open( f'./model/ConvModel_{self.base_model}_results.txt','w') as f:
-                        f.writelines([
-                            f'BaseModel: {self.base_model}\n',
-                            f'Epochs: {epoch + 1}\n',
-                            f'Train Dataloader Batch Size: {train_data.batch_size}\n',
-                            f'Test Dataloader Batch Size: {test_data.batch_size}\n',
-                            f'Params for Adam: {optimizer.__dict__["defaults"]}',
-                            f'Training Loss: {training_loss}\n',
-                            f'Validation Loss: {valid_loss}\n',
-                            f'Training Accuracy: {training_accuracy}\n',
-                            f'Testing Accuracy: {testing_accuracy}\n',
-                            f'Time Taken: {time_taken} seconds'
-                        ])
-
-            # Decide and stop early if needed
-            if epoch >= 1:
-                if previous_accuracy > testing_accuracy and misses < early_stopping_threshold:
-                    misses += 1
-                    previous_accuracy = testing_accuracy
-                elif previous_accuracy > testing_accuracy:
-                    print(f"{bcolors.WARNING}Early Stopping....{bcolors.ENDC}")
-                    print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
-                    break
-            previous_accuracy = testing_accuracy
+        return train_losses, train_accuracies, test_losses, test_accuracies
 
     def test(self, loss_fun, test_data, device = 'cuda'):
         print("Starting Evaluating....")
