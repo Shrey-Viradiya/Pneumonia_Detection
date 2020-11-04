@@ -135,7 +135,7 @@ class CoronaDetection():
             test_correct  = 0 
             test_total    = 0
             misses        = 0
-
+            previous_accuracy = 0
             # Training over batches
             for train_batch, test_batch in zip(train_data, test_data):
                 train_images, train_labels = train_batch
@@ -146,14 +146,20 @@ class CoronaDetection():
                 test_labels  = test_labels.to(device)
                 
                 optimizer.zero_grad()
-
                 train_output = self.model(train_images)
-                train_loss = loss_fun(train_output, train_labels)
-                train_loss.backward()
-                optimizer.step()
-
-                training_loss      += train_loss.item()
-                _, train_predicted  = torch.max(train_output.data, 1)
+                if self.base_model == 'Inception':
+                    train_loss = loss_fun(train_output.logits, train_labels)
+                    train_loss.backward()
+                    optimizer.step()
+                    training_loss      += train_loss.item()
+                    _, train_predicted  = torch.max(train_output.logits.data, 1)
+                else:
+                    train_loss = loss_fun(train_output, train_labels)
+                    train_loss.backward()
+                    optimizer.step()
+                    training_loss      += train_loss.item()
+                    _, train_predicted  = torch.max(train_output.data, 1)
+                
                 train_total        += train_labels.size(0)
                 train_ccount        = (train_predicted == train_labels).sum().item()
                 train_correct      += train_ccount
