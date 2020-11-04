@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import skimage.transform
+import sys
 
 
 class bcolors:
@@ -25,6 +26,7 @@ class bcolors:
 
 pretrained_models = {
     'ResNet18': [torchvision.models.resnet18,'layer4'],
+    'ResNet50': [torchvision.models.resnet50, 'layer4'],
     'Alexnet' : [torchvision.models.alexnet,'features'],
     'VGG16' : [torchvision.models.vgg16_bn,'features'],
     'DenseNet201' : [torchvision.models.densenet201,'denseblock4'],
@@ -37,18 +39,21 @@ pretrained_models = {
 # Different image transformations for training, testing and displaying
 
 img_train_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.RandomCrop((64,64)),
+    torchvision.transforms.Resize((512,512)),
     torchvision.transforms.RandomHorizontalFlip(),
-    torchvision.transforms.ToTensor(),
+    torchvision.transforms.RandomVerticalFlip(),
+    torchvision.transforms.RandomPerspective(),
+    torchvision.transforms.RandomRotation(25),
+    torchvision.transforms.ToTensor(),    
     torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+                                 std=[0.229, 0.224, 0.225]),
     ])
 
 display_transform = torchvision.transforms.Compose([
-        torchvision.transforms.Resize((64,64))])
+        torchvision.transforms.Resize((512,512))])
 
 img_test_transforms = torchvision.transforms.Compose([
-    torchvision.transforms.RandomCrop((64,64)),
+    torchvision.transforms.Resize((512,512)),
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -60,11 +65,10 @@ img_test_transforms = torchvision.transforms.Compose([
 class CoronaDetection():
     """
     Model Architecture and Forward Training Path for the Corona Detection
-
     Idea is to use transfer Learning
     """
     def __init__(self, base_model = 'ResNet18'):
-        assert base_model in ['ResNet18', 'Alexnet', 'VGG16', 'DenseNet161', 'GoogleNet', 'Inception']
+        assert base_model in ['ResNet18', 'ResNet50', 'Alexnet', 'VGG16', 'DenseNet161', 'GoogleNet', 'Inception']
 
         # saving base model name to use it in saving the model
         self.base_model = base_model
@@ -81,12 +85,19 @@ class CoronaDetection():
             
             # Modify last Fully Connected layer to predict for
             # Our requirements
-            self.model.fc = torch.nn.Sequential(
-                torch.nn.Linear(self.model.fc.in_features, 500),
-                torch.nn.ReLU(),
-                torch.nn.Dropout(),
-                torch.nn.Linear(500, 2)
-            )
+            if self.base_model in ['Alexnet', 'VGG16']:
+                num_ftrs = self.model.classifier[6].in_features
+                self.model.classifier[6] = torch.nn.Linear(num_ftrs, 2)
+            elif self.base_model == 'DenseNet':
+                num_ftrs = self.model.classifier.in_features
+                self.model.classifier = torch.nn.Linear(num_ftrs, 2)
+            else:
+                self.model.fc = torch.nn.Sequential(
+                    torch.nn.Linear(self.model.fc.in_features, 500),
+                    torch.nn.ReLU(),
+                    torch.nn.Dropout(),
+                    torch.nn.Linear(500, 2)
+                )
 
             # Save model
             torch.save(self.model, f'./model/ConvModel_{self.base_model}')
@@ -116,54 +127,80 @@ class CoronaDetection():
             start = time.time()
 
             training_loss = 0.0
-            valid_loss = 0.0
+            valid_loss    = 0.0
             
-            self.model.train()
-            correct = 0 
-            total = 0
-
+            train_correct = 0 
+            train_total   = 0
+            test_correct  = 0 
+            test_total    = 0
+            misses        = 0
+            previous_accuracy = 0
             # Training over batches
-            for batch in train_data:
-                train_images, train_labels = batch
+            for train_batch, test_batch in zip(train_data, test_data):
+                train_images, train_labels = train_batch
+                test_images , test_labels  = test_batch
                 train_images = train_images.to(device)
                 train_labels = train_labels.to(device)
+                test_images  = test_images.to(device)
+                test_labels  = test_labels.to(device)
                 
                 optimizer.zero_grad()
-                output = self.model(train_images)
-                loss = loss_fun(output, train_labels)
-                loss.backward()
-                optimizer.step()
-                training_loss += loss.item()
-                _, predicted = torch.max(output.data, 1)
-                total += train_labels.size(0)
-                correct += (predicted == train_labels).sum().item()
-            training_accuracy = correct/total * 100
+                train_output = self.model(train_images)
+                if self.base_model == 'Inception':
+                    train_loss = loss_fun(train_output.logits, train_labels)
+                    train_loss.backward()
+                    optimizer.step()
+                    training_loss      += train_loss.item()
+                    _, train_predicted  = torch.max(train_output.logits.data, 1)
+                else:
+                    train_loss = loss_fun(train_output, train_labels)
+                    train_loss.backward()
+                    optimizer.step()
+                    training_loss      += train_loss.item()
+                    _, train_predicted  = torch.max(train_output.data, 1)
+                
+                train_total        += train_labels.size(0)
+                train_ccount        = (train_predicted == train_labels).sum().item()
+                train_correct      += train_ccount
 
+                with torch.no_grad():
+                    test_output        = self.model(test_images)
+                    test_loss          = loss_fun(test_output,test_labels) 
+                    valid_loss        += test_loss.item()
+                    _, test_predicted  = torch.max(test_output.data, 1)
+                    test_total        += test_labels.size(0)
+                    test_ccount        = (test_predicted == test_labels).sum().item()
+                    test_correct      += test_ccount
+                
+                sys.stdout.write(f"\rEpoch {epoch+1} \t Training Loss => {train_loss:.4f} \t Training Acc => {train_ccount/train_images.shape[0]*100:.2f} \t Test Loss => {test_loss:.4f} \t Test Acc => {test_ccount/test_images.shape[0]*100:.2f}")
+            
+            training_accuracy = train_correct/train_total * 100
 
-            # Start evaluating
-            self.model.eval()
-            correct = 0 
-            total = 0
-            previous_accuracy = 0.0
-            misses = 0
+            valid_loss    = 0.0
+            test_correct  = 0 
+            test_total    = 0
+            misses        = 0
 
-            # Without changing parameters
             with torch.no_grad():
-                # Testing over batches
-                for batch in test_data:
-                    test_images, test_labels = batch
-                    test_images = test_images.to(device)
-                    test_labels = test_labels.to(device)
+                for test_batch in test_data:
+                    test_images , test_labels  = test_batch
+                    test_images  = test_images.to(device)
+                    test_labels  = test_labels.to(device)
+                    test_output        = self.model(test_images)
+                    test_loss          = loss_fun(test_output,test_labels)
+                    valid_loss        += test_loss.item()
+                    _, test_predicted  = torch.max(test_output.data, 1)
+                    test_total        += test_labels.size(0)
+                    test_ccount        = (test_predicted == test_labels).sum().item()
+                    test_correct      += test_ccount
+            testing_accuracy  = test_correct /test_total  * 100
 
-                    output = self.model(test_images)
-                    loss = loss_fun(output,test_labels) 
-                    valid_loss += loss.item()
-                    _, predicted = torch.max(output.data, 1)
-                    total += test_labels.size(0)
-                    correct += (predicted == test_labels).sum().item()
-            testing_accuracy = correct/total * 100
+            sys.stdout.flush()
+            sys.stdout.write("\r")
 
             time_taken = time.time() - start
+
+            print(f"Epoch {epoch+1} \t Training Loss => {training_loss:.4f} \t Training Acc => {training_accuracy:.2f} \t Test Loss => {valid_loss:.4f} \t Test Acc => {testing_accuracy:.2f} \t Time Taken : {time_taken:.2f}")
 
             # Save if it is better model than max_accuracy
             if (testing_accuracy > max_accurracy):
@@ -174,7 +211,10 @@ class CoronaDetection():
                         f.writelines([
                             f'BaseModel: {self.base_model}\n',
                             f'Epochs: {epoch + 1}\n',
-                            f'Training Loss:: {training_loss}\n',
+                            f'Train Dataloader Batch Size: {train_data.batch_size}\n',
+                            f'Test Dataloader Batch Size: {test_data.batch_size}\n',
+                            f'Params for Adam: {optimizer.__dict__["defaults"]}',
+                            f'Training Loss: {training_loss}\n',
                             f'Validation Loss: {valid_loss}\n',
                             f'Training Accuracy: {training_accuracy}\n',
                             f'Testing Accuracy: {testing_accuracy}\n',
@@ -182,15 +222,15 @@ class CoronaDetection():
                         ])
 
             # Decide and stop early if needed
-            if previous_accuracy > testing_accuracy and misses < early_stopping_threshold:
-                misses += 1
-                previous_accuracy = testing_accuracy
-            elif previous_accuracy > testing_accuracy:
-                print(f"{bcolors.WARNING}Early Stopping....{bcolors.ENDC}")
-                print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
-                break
-
-            print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
+            if epoch >= 1:
+                if previous_accuracy > testing_accuracy and misses < early_stopping_threshold:
+                    misses += 1
+                    previous_accuracy = testing_accuracy
+                elif previous_accuracy > testing_accuracy:
+                    print(f"{bcolors.WARNING}Early Stopping....{bcolors.ENDC}")
+                    print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
+                    break
+            previous_accuracy = testing_accuracy
 
     def test(self, loss_fun, test_data, device = 'cuda'):
         print("Starting Evaluating....")
