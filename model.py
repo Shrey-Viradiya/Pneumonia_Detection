@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import skimage.transform
+import sys
 
 
 class bcolors:
@@ -127,52 +128,51 @@ class CoronaDetection():
             start = time.time()
 
             training_loss = 0.0
-            valid_loss = 0.0
+            valid_loss    = 0.0
             
-            self.model.train()
-            correct = 0 
-            total = 0
+            train_correct = 0 
+            train_total   = 0
+            test_correct  = 0 
+            test_total    = 0
+            misses        = 0
 
             # Training over batches
-            for batch in train_data:
-                train_images, train_labels = batch
+            for train_batch, test_batch in zip(train_data, test_data):
+                train_images, train_labels = train_batch
+                test_images , test_labels  = test_batch
                 train_images = train_images.to(device)
                 train_labels = train_labels.to(device)
+                test_images  = test_images.to(device)
+                test_labels  = test_labels.to(device)
                 
                 optimizer.zero_grad()
-                output = self.model(train_images)
-                loss = loss_fun(output, train_labels)
-                loss.backward()
+
+                train_output = self.model(train_images)
+                train_loss = loss_fun(train_output, train_labels)
+                train_loss.backward()
                 optimizer.step()
-                training_loss += loss.item()
-                _, predicted = torch.max(output.data, 1)
-                total += train_labels.size(0)
-                correct += (predicted == train_labels).sum().item()
-            training_accuracy = correct/total * 100
 
+                training_loss      += train_loss.item()
+                _, train_predicted  = torch.max(train_output.data, 1)
+                train_total        += train_labels.size(0)
+                train_ccount        = (train_predicted == train_labels).sum().item()
+                train_correct      += train_ccount
 
-            # Start evaluating
-            self.model.eval()
-            correct = 0 
-            total = 0
-            previous_accuracy = 0.0
-            misses = 0
+                with torch.no_grad():
+                    test_output        = self.model(test_images)
+                    test_loss          = loss_fun(test_output,test_labels) 
+                    valid_loss        += test_loss.item()
+                    _, test_predicted  = torch.max(test_output.data, 1)
+                    test_total        += test_labels.size(0)
+                    test_ccount        = (test_predicted == test_labels).sum().item()
+                    test_correct      += test_ccount
+                
+                sys.stdout.write(f"\rEpoch {epoch+1} \t Training Loss => {train_loss:.4f} \t Training Acc => {train_ccount/train_images.shape[0]:.2f} \t Test Loss => {test_loss:.4f} \t Test Acc => {test_ccount/test_images.shape[0]:.2f}")
+            
+            training_accuracy = train_correct/train_total * 100
+            testing_accuracy  = test_correct /test_total  * 100
 
-            # Without changing parameters
-            with torch.no_grad():
-                # Testing over batches
-                for batch in test_data:
-                    test_images, test_labels = batch
-                    test_images = test_images.to(device)
-                    test_labels = test_labels.to(device)
-
-                    output = self.model(test_images)
-                    loss = loss_fun(output,test_labels) 
-                    valid_loss += loss.item()
-                    _, predicted = torch.max(output.data, 1)
-                    total += test_labels.size(0)
-                    correct += (predicted == test_labels).sum().item()
-            testing_accuracy = correct/total * 100
+            print()
 
             time_taken = time.time() - start
 
@@ -196,15 +196,15 @@ class CoronaDetection():
                         ])
 
             # Decide and stop early if needed
-            if previous_accuracy > testing_accuracy and misses < early_stopping_threshold:
-                misses += 1
-                previous_accuracy = testing_accuracy
-            elif previous_accuracy > testing_accuracy:
-                print(f"{bcolors.WARNING}Early Stopping....{bcolors.ENDC}")
-                print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
-                break
-
-            print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
+            if epoch >= 1:
+                if previous_accuracy > testing_accuracy and misses < early_stopping_threshold:
+                    misses += 1
+                    previous_accuracy = testing_accuracy
+                elif previous_accuracy > testing_accuracy:
+                    print(f"{bcolors.WARNING}Early Stopping....{bcolors.ENDC}")
+                    print(f'{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s')
+                    break
+            previous_accuracy = testing_accuracy
 
     def test(self, loss_fun, test_data, device = 'cuda'):
         print("Starting Evaluating....")
