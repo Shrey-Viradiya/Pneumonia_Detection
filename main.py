@@ -2,7 +2,6 @@ import torch
 import torchvision
 from model import *
 import sys
-import matplotlib.pyplot as plt
 
 print("Corona Detection Project")
 
@@ -36,11 +35,10 @@ print("Starting Training")
 train_losses, train_accuracies, test_losses, test_accuracies = model.train(optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, test_data_loader, epochs=25, device=device)
 print("Completed Training")
 
-plt.plot(range(epochs), train_losses, color='r', label="train losses")
-plt.plot(range(epochs), test_losses, color='g', label="test losses")
-plt.legend()
-plt.title("Train and Test Losses")
-plt.xtitle("Epoch")
-plt.ytitle("Loss")
-plt.show()
+train_losses, train_accuracies, test_losses, test_accuracies = map(np.asarray, [train_losses, train_accuracies, test_losses, test_accuracies])
+
+np.save("./model/train_losses", train_losses)
+np.save("./model/train_accuracies", train_accuracies)
+np.save("./model/test_losses", test_losses)
+np.save("./model/test_accuracies", test_accuracies)
 
