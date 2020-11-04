@@ -39,9 +39,12 @@ pretrained_models = {
 img_train_transforms = torchvision.transforms.Compose([
     torchvision.transforms.Resize((512,512)),
     torchvision.transforms.RandomHorizontalFlip(),
-    torchvision.transforms.ToTensor(),
+    torchvision.transforms.RandomVerticalFlip(),
+    torchvision.transforms.RandomPerspective(),
+    torchvision.transforms.RandomRotation(25),
+    torchvision.transforms.ToTensor(),    
     torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+                                 std=[0.229, 0.224, 0.225]),
     ])
 
 display_transform = torchvision.transforms.Compose([

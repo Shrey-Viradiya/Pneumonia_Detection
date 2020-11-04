@@ -26,7 +26,10 @@ else:
 
 print("Creating Model Object: ")
 model = CoronaDetection(sys.argv[1])
-optimizer = torch.optim.Adam(model.model.parameters(), lr=0.00005)
+
+learning_rate = float(sys.argv[2])
+
+optimizer = torch.optim.Adam(model.model.parameters(), lr=learning_rate)
 
 print("Starting Training")
 model.train(optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, test_data_loader, epochs=25, device=device)
