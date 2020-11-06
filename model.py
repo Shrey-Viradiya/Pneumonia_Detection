@@ -31,7 +31,6 @@ pretrained_models = {
     "ResNet50": [torchvision.models.resnet50, "layer4"],
     "Alexnet": [torchvision.models.alexnet, "features"],
     "VGG16": [torchvision.models.vgg16_bn, "features"],
-    "DenseNet201": [torchvision.models.densenet201, "denseblock4"],
     "GoogleNet": [torchvision.models.googlenet, "inception5b"],
     "Inception": [torchvision.models.inception_v3, "Mixed_7c"],
 }
@@ -46,6 +45,7 @@ img_train_transforms = torchvision.transforms.Compose(
         torchvision.transforms.RandomVerticalFlip(),
         torchvision.transforms.RandomPerspective(),
         torchvision.transforms.RandomRotation(25),
+        torchvision.transforms.RandomResizedCrop((512, 512), scale=(0.7, 1.0), ratio=(0.75, 1.3333333333333333), interpolation=2),
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -83,7 +83,6 @@ class CoronaDetection:
             "ResNet50",
             "Alexnet",
             "VGG16",
-            "DenseNet161",
             "GoogleNet",
             "Inception",
         ]
@@ -106,9 +105,6 @@ class CoronaDetection:
             if self.base_model in ["Alexnet", "VGG16"]:
                 num_ftrs = self.model.classifier[6].in_features
                 self.model.classifier[6] = torch.nn.Linear(num_ftrs, 2)
-            elif self.base_model == "DenseNet":
-                num_ftrs = self.model.classifier.in_features
-                self.model.classifier = torch.nn.Linear(num_ftrs, 2)
             else:
                 self.model.fc = torch.nn.Sequential(
                     torch.nn.Linear(self.model.fc.in_features, 500),
@@ -165,18 +161,12 @@ class CoronaDetection:
 
                 train_correct = 0
                 train_total = 0
-                test_correct = 0
-                test_total = 0
-                misses = 0
-                previous_accuracy = 0
+                
                 # Training over batches
-                for train_batch, test_batch in zip(train_data, test_data):
+                for train_batch in train_data:
                     train_images, train_labels = train_batch
-                    test_images, test_labels = test_batch
                     train_images = train_images.to(device)
                     train_labels = train_labels.to(device)
-                    test_images = test_images.to(device)
-                    test_labels = test_labels.to(device)
 
                     optimizer.zero_grad()
                     train_output = self.model(train_images)
@@ -197,17 +187,9 @@ class CoronaDetection:
                     train_ccount = (train_predicted == train_labels).sum().item()
                     train_correct += train_ccount
 
-                    with torch.no_grad():
-                        test_output = self.model(test_images)
-                        test_loss = loss_fun(test_output, test_labels)
-                        valid_loss += test_loss.item()
-                        _, test_predicted = torch.max(test_output.data, 1)
-                        test_total += test_labels.size(0)
-                        test_ccount = (test_predicted == test_labels).sum().item()
-                        test_correct += test_ccount
-
+                   
                     sys.stdout.write(
-                        f"\rEpoch {epoch+1} \t Training Loss => {train_loss:.4f} \t Training Acc => {train_ccount/train_images.shape[0]*100:.2f} \t Test Loss => {test_loss:.4f} \t Test Acc => {test_ccount/test_images.shape[0]*100:.2f}"
+                        f"\rEpoch {epoch+1} \t Training Loss => {train_loss:.4f} \t Training Acc => {train_ccount/train_images.shape[0]*100:.2f}"
                     )
 
                 training_accuracy = train_correct / train_total * 100
@@ -216,6 +198,7 @@ class CoronaDetection:
                 test_correct = 0
                 test_total = 0
                 misses = 0
+                previous_accuracy = 0
 
                 with torch.no_grad():
                     for test_batch in test_data:

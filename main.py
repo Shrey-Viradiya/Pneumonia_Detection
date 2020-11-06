@@ -45,7 +45,7 @@ train_losses, train_accuracies, test_losses, test_accuracies = model.train(
     torch.nn.CrossEntropyLoss(),
     train_data_loader,
     test_data_loader,
-    epochs=25,
+    epochs=int(sys.argv[4]),
     device=device,
 )
 print("Completed Training")
