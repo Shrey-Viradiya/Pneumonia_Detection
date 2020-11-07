@@ -1,5 +1,6 @@
-import numpy as np
 from PIL import Image
+
+import numpy as np
 
 
 def image_center_crop(path):
