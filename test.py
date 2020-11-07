@@ -1,7 +1,9 @@
+import sys
+
 import torch
 import torchvision
-from model import *
-import sys
+
+from model import CoronaDetection, img_test_transforms
 
 if torch.cuda.is_available():
     print("Using GPU")

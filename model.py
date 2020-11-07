@@ -1,31 +1,16 @@
-import torch
 import os
+import sys
 import time
-import torchvision
-import numpy as np
 from PIL import Image
+
+import numpy as np
+import torch
+import torchvision
 import matplotlib.pyplot as plt
 import skimage.transform
-import sys
-
-
-class bcolors:
-    """
-    Class for colored output
-    """
-
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
 
 
 # Dictionary for pretrained models and their last layer name
-
 pretrained_models = {
     "ResNet18": [torchvision.models.resnet18, "layer4"],
     "ResNet50": [torchvision.models.resnet50, "layer4"],
@@ -37,7 +22,6 @@ pretrained_models = {
 
 
 # Different image transformations for training, testing and displaying
-
 img_train_transforms = torchvision.transforms.Compose(
     [
         torchvision.transforms.Resize((512, 512)),
@@ -45,7 +29,12 @@ img_train_transforms = torchvision.transforms.Compose(
         torchvision.transforms.RandomVerticalFlip(),
         torchvision.transforms.RandomPerspective(),
         torchvision.transforms.RandomRotation(25),
-        torchvision.transforms.RandomResizedCrop((512, 512), scale=(0.7, 1.0), ratio=(0.75, 1.3333333333333333), interpolation=2),
+        torchvision.transforms.RandomResizedCrop(
+            (512, 512),
+            scale=(0.7, 1.0),
+            ratio=(0.75, 1.3333333333333333),
+            interpolation=2,
+        ),
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -69,8 +58,6 @@ img_test_transforms = torchvision.transforms.Compose(
 
 
 # The main model object
-
-
 class CoronaDetection:
     """
     Model Architecture and Forward Training Path for the Corona Detection
@@ -161,8 +148,9 @@ class CoronaDetection:
 
                 train_correct = 0
                 train_total = 0
-                
+
                 # Training over batches
+                self.model.train(mode=True)
                 for train_batch in train_data:
                     train_images, train_labels = train_batch
                     train_images = train_images.to(device)
@@ -170,26 +158,28 @@ class CoronaDetection:
 
                     optimizer.zero_grad()
                     train_output = self.model(train_images)
+
                     if self.base_model == "Inception":
-                        train_loss = loss_fun(train_output.logits, train_labels)
-                        train_loss.backward()
-                        optimizer.step()
-                        training_loss += train_loss.item()
-                        _, train_predicted = torch.max(train_output.logits.data, 1)
-                    else:
-                        train_loss = loss_fun(train_output, train_labels)
-                        train_loss.backward()
-                        optimizer.step()
-                        training_loss += train_loss.item()
-                        _, train_predicted = torch.max(train_output.data, 1)
+                        train_output = train_output.logits
+
+                    train_loss = loss_fun(train_output, train_labels)
+
+                    train_loss.backward()
+                    optimizer.step()
+
+                    training_loss += train_loss.item()
+
+                    _, train_predicted = torch.max(train_output.data, 1)
 
                     train_total += train_labels.size(0)
                     train_ccount = (train_predicted == train_labels).sum().item()
                     train_correct += train_ccount
 
-                   
                     sys.stdout.write(
-                        f"\rEpoch {epoch+1} \t Training Loss => {train_loss:.4f} \t Training Acc => {train_ccount/train_images.shape[0]*100:.2f}"
+                        f"\rEpoch {epoch+1}\t"
+                        f"Training Loss => {train_loss:.4f}\t"
+                        f"Training Acc => "
+                        f"{train_ccount/train_images.shape[0]*100:5.2f}"
                     )
 
                 training_accuracy = train_correct / train_total * 100
@@ -200,18 +190,28 @@ class CoronaDetection:
                 misses = 0
                 previous_accuracy = 0
 
+                # Test over batches
+                self.model.train(mode=False)
                 with torch.no_grad():
                     for test_batch in test_data:
                         test_images, test_labels = test_batch
                         test_images = test_images.to(device)
                         test_labels = test_labels.to(device)
+
                         test_output = self.model(test_images)
+
+                        if self.base_model == "Inception":
+                            test_output = test_output.logits
+
                         test_loss = loss_fun(test_output, test_labels)
                         valid_loss += test_loss.item()
+
                         _, test_predicted = torch.max(test_output.data, 1)
+
                         test_total += test_labels.size(0)
                         test_ccount = (test_predicted == test_labels).sum().item()
                         test_correct += test_ccount
+
                 testing_accuracy = test_correct / test_total * 100
 
                 sys.stdout.flush()
@@ -220,7 +220,12 @@ class CoronaDetection:
                 time_taken = time.time() - start
 
                 print(
-                    f"Epoch {epoch+1} \t Training Loss => {training_loss:.4f} \t Training Acc => {training_accuracy:.2f} \t Test Loss => {valid_loss:.4f} \t Test Acc => {testing_accuracy:.2f} \t Time Taken : {time_taken:.2f}"
+                    f"Epoch {epoch + 1}\t"
+                    f"Training Loss => {training_loss:.4f}\t"
+                    f"Training Acc => {training_accuracy:5.2f}\t"
+                    f"Test Loss => {valid_loss:.4f}\t"
+                    f"Test Acc => {testing_accuracy:5.2f}\t"
+                    f"Time Taken => {time_taken:5.2f}"
                 )
 
                 train_losses.append(training_loss)
@@ -242,7 +247,7 @@ class CoronaDetection:
                                 f"Epochs: {epoch + 1}\n",
                                 f"Train Dataloader Batch Size: {train_data.batch_size}\n",
                                 f"Test Dataloader Batch Size: {test_data.batch_size}\n",
-                                f'Params for Adam: {optimizer.__dict__["defaults"]}',
+                                f'Params for Adam: {optimizer.__dict__["defaults"]}\n',
                                 f"Training Loss: {training_loss}\n",
                                 f"Validation Loss: {valid_loss}\n",
                                 f"Training Accuracy: {training_accuracy}\n",
@@ -260,13 +265,19 @@ class CoronaDetection:
                         misses += 1
                         previous_accuracy = testing_accuracy
                     elif previous_accuracy > testing_accuracy:
-                        print(f"{bcolors.WARNING}Early Stopping....{bcolors.ENDC}")
+                        print(f"Early Stopping....")
                         print(
-                            f"{bcolors.OKGREEN}Epoch:{bcolors.ENDC} {epoch + 1}, {bcolors.OKGREEN}Training Loss:{bcolors.ENDC} {training_loss:.5f}, {bcolors.OKGREEN}Validation Loss:{bcolors.ENDC} {valid_loss:.5f}, {bcolors.OKGREEN}Training accuracy:{bcolors.ENDC} {training_accuracy:.2f} %, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time_taken:.2f} s"
+                            f"Epoch {epoch + 1}\t"
+                            f"Training Loss => {training_loss:.4f}\t"
+                            f"Training accuracy => {training_accuracy:5.2f}\t"
+                            f"Test Loss => {valid_loss:.4f}\t"
+                            f"Testing accuracy => {testing_accuracy:5.2f}\t"
+                            f"Time Taken => {time_taken:.2f}"
                         )
                         break
                 previous_accuracy = testing_accuracy
         except KeyboardInterrupt:
+            print()
             print("Force Stopping Model Training...")
             return train_losses, train_accuracies, test_losses, test_accuracies
 
@@ -297,7 +308,9 @@ class CoronaDetection:
         testing_accuracy = correct / total * 100
 
         print(
-            f"{bcolors.OKGREEN}Test Loss:{bcolors.ENDC} {test_loss:.5f}, {bcolors.OKGREEN}Testing accuracy:{bcolors.ENDC} {testing_accuracy:.2f} %, {bcolors.OKGREEN}time:{bcolors.ENDC} {time.time() - start:.2f} s"
+            f"Test Loss => {test_loss:.5f}\t"
+            f"Testing accuracy => {testing_accuracy:.2f}\t"
+            f"Time Taken => {time.time() - start:.2f}"
         )
 
     def CAM(self, image_path_input, overlay_path_output):
