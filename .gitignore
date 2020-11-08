@@ -5,6 +5,3 @@ __pycache__
 env/
 venv/
 .vscode
-*.npy
-*.npz
-ConvModel_*
