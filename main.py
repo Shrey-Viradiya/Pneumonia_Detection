@@ -1,7 +1,10 @@
+import sys
+
+import numpy as np
 import torch
 import torchvision
-from model import *
-import sys
+
+from model import CoronaDetection, img_train_transforms, img_test_transforms
 
 print("Corona Detection Project")
 
