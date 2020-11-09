@@ -1,9 +1,12 @@
 import os
 import shutil
 import sys
-import pandas as pd
-from preprocessor import *
 import platform
+
+import pandas as pd
+
+from preprocessor import image_center_crop
+
 
 if not os.path.exists("./data"):
     os.mkdir("./data")
