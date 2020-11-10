@@ -80,6 +80,7 @@ class CoronaDetection:
         if os.path.exists(f"./model/ConvModel_{self.base_model}"):
             # check if the model is intialized before
             self.model = torch.load(f"./model/ConvModel_{self.base_model}")
+            # print(self.model)
         else:
             # If not initialized before
             # Download it and save it
@@ -313,20 +314,22 @@ class CoronaDetection:
             f"Time Taken => {time.time() - start:.2f}"
         )
 
-    def CAM(self, image_path_input, overlay_path_output):
+    def CAM(self, image_path_input, overlay_path_output, device="cuda"):
         """
         CAM - Class Activation Map
         """
 
         # open image
         image = Image.open(image_path_input)
+        image = image.convert('RGB')
+        print(image.mode)
 
         tensor = img_test_transforms(image)
 
         prediction_var = torch.autograd.Variable(
             (tensor.unsqueeze(0)).cuda(), requires_grad=True
         )
-
+        self.model.to(device)
         self.model.eval()
 
         class SaveFeatures:
@@ -341,10 +344,8 @@ class CoronaDetection:
             def remove(self):
                 self.hook.remove()
 
-        final_layer = self.model._modules.get("layer4")
-
-        activated_features = SaveFeatures(final_layer)
-
+        activated_features = SaveFeatures(self.final_layer)
+        prediction_var = prediction_var.to(device)
         prediction = self.model(prediction_var)
 
         pred_probabilities = torch.nn.functional.softmax(
@@ -370,7 +371,7 @@ class CoronaDetection:
 
         overlay = getCAM(activated_features.features, weight_softmax, class_idx)
 
-        plt.figure()
+        plt.figure(figsize=(32,15))
         plt.subplot(1, 2, 1)
         plt.imshow(display_transform(image))
         plt.subplot(1, 2, 2)
