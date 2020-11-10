@@ -12,4 +12,4 @@ else:
 print("Creating Model Object: ")
 model = CoronaDetection(sys.argv[1])
 
-model.CAM('./data/Corona_Classification_data/test/INFECTED/person3_virus_17.jpeg',f'Infected_{sys.argv[1]}.jpg', device)
+model.CAM(sys.argv[2],f'CAM_{sys.argv[1]}.jpg', device)
