@@ -102,7 +102,7 @@ class CoronaDetection:
 
             # Modify last Fully Connected layer to predict for
             # Our requirements
-            if self.base_model in ["Alexnet", "VGG16"]:
+            if self.base_model in ["Alexnet", "VGG11", "VGG13", "VGG16", "VGG19"]:
                 num_ftrs = self.model.classifier[6].in_features
                 self.model.classifier[6] = torch.nn.Linear(num_ftrs, 2)
             else:
