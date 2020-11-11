@@ -70,7 +70,7 @@ class CoronaDetection:
     Idea is to use transfer Learning
     """
 
-    def __init__(self, base_model="ResNet18"):
+    def __init__(self, base_model="ResNet18", colab = False):
         assert base_model in [
             "ResNet18",
             "ResNet34",
@@ -88,10 +88,14 @@ class CoronaDetection:
 
         # saving base model name to use it in saving the model
         self.base_model = base_model
+        if colab:
+            self.colab_training = f"drive/My drive/{self.base_model}/"
+        else:
+            self.colab_training = "."
 
-        if os.path.exists(f"./model/ConvModel_{self.base_model}"):
+        if os.path.exists(f"{self.colab_training}/model/ConvModel_{self.base_model}"):
             # check if the model is intialized before
-            self.model = torch.load(f"./model/ConvModel_{self.base_model}")
+            self.model = torch.load(f"{self.colab_training}/model/ConvModel_{self.base_model}")
             # print(self.model)
         else:
             # If not initialized before
@@ -114,7 +118,7 @@ class CoronaDetection:
                 )
 
             # Save model
-            torch.save(self.model, f"./model/ConvModel_{self.base_model}")
+            torch.save(self.model, f"{self.colab_training}/model/ConvModel_{self.base_model}")
 
         # get final model for using it in Class Activation Map
         self.final_layer = self.model._modules.get(
@@ -248,10 +252,10 @@ class CoronaDetection:
             # Save if it is better model than max_accuracy
             if testing_accuracy > max_accurracy:
                 max_accurracy = testing_accuracy
-                torch.save(self.model, f"./model/ConvModel_{self.base_model}")
+                torch.save(self.model, f"{self.colab_training}/model/ConvModel_{self.base_model}")
 
                 with open(
-                    f"./model/ConvModel_{self.base_model}_results.txt", "w"
+                    f"{self.colab_training}/model/ConvModel_{self.base_model}_results.txt", "w"
                 ) as f:
                     f.writelines(
                         [
@@ -289,10 +293,10 @@ class CoronaDetection:
                     break
             previous_accuracy = testing_accuracy
 
-            np.save(f"./model/train_losses_{self.base_model}", train_losses)
-            np.save(f"./model/train_accuracies_{self.base_model}", train_accuracies)
-            np.save(f"./model/test_losses_{self.base_model}", test_losses)
-            np.save(f"./model/test_accuracies_{self.base_model}", test_accuracies)
+            np.save(f"{self.colab_training}/model/train_losses_{self.base_model}", train_losses)
+            np.save(f"{self.colab_training}/model/train_accuracies_{self.base_model}", train_accuracies)
+            np.save(f"{self.colab_training}/model/test_losses_{self.base_model}", test_losses)
+            np.save(f"{self.colab_training}/model/test_accuracies_{self.base_model}", test_accuracies)
 
     def test(self, loss_fun, test_data, device="cuda"):
         print("Starting Evaluating....")

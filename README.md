@@ -15,11 +15,11 @@ Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xray
     - kaggle module will look for this token at ```~/.kaggle/kaggle.json``` on Linux, OSX, and other UNIX-based operating systems, and at ```C:\Users\<Windows-username>\.kaggle\kaggle.json``` on Windows.
     - execute ```python data.py```
 
-- run ```main.py``` to train from the dataset like ```python3 main.py {Model_Name} {learning_rate} {batch_size} {epochs}```
+- run ```main.py``` to train from the dataset like ```python main.py --base_model {base_model} --optimizer {optimizer} --learning_rate {learning_rate} --batch_size {batch_size} --epoch {epoch} --colab```
 
-    Example, ```python3 main.py Inception 0.0001 32 20```
+    Example, ```python main.py --base_model Inception --optimizer Adam --learning_rate 0.00001 --batch_size 32 --epoch 25 --colab```
 
-    - To change pretrained base model, give input while initializing the model object and in command line argument.  Use values from 
+    - To change pretrained base model, give input while initializing the model object. Use values from 
         - ResNet18 
         - ResNet34
         - ResNet50
@@ -32,6 +32,15 @@ Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xray
         - VGG19
         - GoogleNet
         - Inception
+
+    - If using colab for training, mount the drive and use --colab to save the files in the drive
+
+    - To change optimizers, use one of the following
+        - Adam
+        - SGD
+        - RMSprop
+        - Adagrad
+        - Adadelta
 
 - To test new dataset, run ```test.py``` with directory path and base model with option given above. Make sure that model is trained on those models first. 
 
