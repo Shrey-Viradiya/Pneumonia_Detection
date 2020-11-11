@@ -289,10 +289,10 @@ class CoronaDetection:
                     break
             previous_accuracy = testing_accuracy
 
-            np.save(f"./model/train_losses_{self.model.base_model}", train_losses)
-            np.save(f"./model/train_accuracies_{self.model.base_model}", train_accuracies)
-            np.save(f"./model/test_losses_{self.model.base_model}", test_losses)
-            np.save(f"./model/test_accuracies_{self.model.base_model}", test_accuracies)
+            np.save(f"./model/train_losses_{self.base_model}", train_losses)
+            np.save(f"./model/train_accuracies_{self.base_model}", train_accuracies)
+            np.save(f"./model/test_losses_{self.base_model}", test_losses)
+            np.save(f"./model/test_accuracies_{self.base_model}", test_accuracies)
 
     def test(self, loss_fun, test_data, device="cuda"):
         print("Starting Evaluating....")

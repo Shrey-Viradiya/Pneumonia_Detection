@@ -30,7 +30,6 @@ Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xray
         - VGG13
         - VGG16
         - VGG19
-        - DenseNet161
         - GoogleNet
         - Inception
 
