@@ -89,11 +89,12 @@ class CoronaDetection:
         # saving base model name to use it in saving the model
         self.base_model = base_model
         if colab:
-            self.colab_training = f"drive/My drive/{self.base_model}/"
+            self.colab_training = f"drive/My Drive/{self.base_model}"
         else:
             self.colab_training = "."
         
         if not os.path.exists(f"{self.colab_training}/model"):
+            os.mkdir(f"{self.colab_training}")
             os.mkdir(f"{self.colab_training}/model")
         
         if os.path.exists(f"{self.colab_training}/model/ConvModel_{self.base_model}"):
