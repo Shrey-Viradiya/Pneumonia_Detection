@@ -37,8 +37,8 @@ img_train_transforms = torchvision.transforms.Compose(
         torchvision.transforms.RandomRotation(25),
         torchvision.transforms.RandomResizedCrop(
             (512, 512),
-            scale=(0.7, 1.0),
-            ratio=(0.75, 1.3333333333333333),
+            scale=(0.4, 1.0),
+            ratio=(0.5, 1.5),
             interpolation=2,
         ),
         torchvision.transforms.ToTensor(),
