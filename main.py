@@ -56,8 +56,3 @@ print("Completed Training")
 train_losses, train_accuracies, test_losses, test_accuracies = map(
     np.asarray, [train_losses, train_accuracies, test_losses, test_accuracies]
 )
-
-np.save(f"./model/train_losses_{model.base_model}", train_losses)
-np.save(f"./model/train_accuracies_{model.base_model}", train_accuracies)
-np.save(f"./model/test_losses_{model.base_model}", test_losses)
-np.save(f"./model/test_accuracies_{model.base_model}", test_accuracies)
