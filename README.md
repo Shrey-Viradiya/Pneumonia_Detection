@@ -21,8 +21,15 @@ Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xray
 
     - To change pretrained base model, give input while initializing the model object and in command line argument.  Use values from 
         - ResNet18 
+        - ResNet34
+        - ResNet50
+        - ResNet101
+        - ResNet152
         - Alexnet 
+        - VGG11
+        - VGG13
         - VGG16
+        - VGG19
         - DenseNet161
         - GoogleNet
         - Inception
