@@ -219,9 +219,6 @@ class CoronaDetection:
 
                     test_output = self.model(test_images)
 
-                    if self.base_model == "Inception":
-                        test_output = test_output.logits
-
                     test_loss = loss_fun(test_output, test_labels)
                     valid_loss += test_loss.item()
 
