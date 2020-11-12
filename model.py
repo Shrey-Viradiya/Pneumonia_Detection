@@ -264,7 +264,7 @@ class CoronaDetection:
                             f"Epochs: {epoch + 1}\n",
                             f"Train Dataloader Batch Size: {train_data.batch_size}\n",
                             f"Test Dataloader Batch Size: {test_data.batch_size}\n",
-                            f'Params for Adam: {optimizer.__dict__["defaults"]}\n',
+                            f'Params for Optimizer: {optimizer.__repr__()}\n',
                             f"Training Loss: {training_loss}\n",
                             f"Validation Loss: {valid_loss}\n",
                             f"Training Accuracy: {training_accuracy}\n",
