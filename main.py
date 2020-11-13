@@ -24,23 +24,46 @@ This will run main.py with base model as Inception and given parameters
 """
 
 parser = argparse.ArgumentParser(description=DESCRIPTION, usage=USAGE)
-parser.add_argument('--base_model', metavar='base_model', type=str, action='store',
-                    help='Base Model to use. Available Options: ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, Alexnet, VGG11, VGG13, VGG16, VGG19, GoogleNet, Inception',
-                    required=True)
-parser.add_argument('--optimizer', metavar='optimizer', type=str, action='store',
-                    help='Optimizer to use in the training',
-                    required=True)
-parser.add_argument('--learning_rate', metavar='learning_rate', type=float, action='store',
-                    help='Learning Rate for training',
-                    default=0.00001)
-parser.add_argument('--batch_size', metavar='batch_size', type=int, action='store',
-                    help='Batch_size',
-                    default=16)
-parser.add_argument('--epoch', metavar='epoch', type=int, action='store',
-                    help='Epoch',
-                    default=15)
-parser.add_argument('--colab' , action='store_true',
-                    help='Option to use when using colab for training...Mount the drive and it will be saved in the drive')
+parser.add_argument(
+    "--base_model",
+    metavar="base_model",
+    type=str,
+    action="store",
+    help="Base Model to use. Available Options: ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, Alexnet, VGG11, VGG13, VGG16, VGG19, GoogleNet, Inception",
+    required=True,
+)
+parser.add_argument(
+    "--optimizer",
+    metavar="optimizer",
+    type=str,
+    action="store",
+    help="Optimizer to use in the training",
+    required=True,
+)
+parser.add_argument(
+    "--learning_rate",
+    metavar="learning_rate",
+    type=float,
+    action="store",
+    help="Learning Rate for training",
+    default=0.00001,
+)
+parser.add_argument(
+    "--batch_size",
+    metavar="batch_size",
+    type=int,
+    action="store",
+    help="Batch_size",
+    default=16,
+)
+parser.add_argument(
+    "--epoch", metavar="epoch", type=int, action="store", help="Epoch", default=15
+)
+parser.add_argument(
+    "--colab",
+    action="store_true",
+    help="Option to use when using colab for training...Mount the drive and it will be saved in the drive",
+)
 
 kwargs = vars(parser.parse_args())
 
@@ -74,19 +97,19 @@ else:
     device = torch.device("cpu")
 
 print("Creating Model Object: ")
-model = CoronaDetection(kwargs['base_model'], colab = kwargs['colab'])
+model = CoronaDetection(kwargs["base_model"], colab=kwargs["colab"])
 
-learning_rate = kwargs['learning_rate']
+learning_rate = kwargs["learning_rate"]
 
 optimizers = {
-    'Adam' : torch.optim.Adam,
-    'SGD' : torch.optim.SGD,
-    'RMSprop' : torch.optim.RMSprop,
-    'Adagrad' : torch.optim.Adagrad,
-    'Adadelta' : torch.optim.Adadelta,
+    "Adam": torch.optim.Adam,
+    "SGD": torch.optim.SGD,
+    "RMSprop": torch.optim.RMSprop,
+    "Adagrad": torch.optim.Adagrad,
+    "Adadelta": torch.optim.Adadelta,
 }
 
-optimizer = optimizers[kwargs['optimizer']](model.model.parameters(), lr=learning_rate)
+optimizer = optimizers[kwargs["optimizer"]](model.model.parameters(), lr=learning_rate)
 
 print("Starting Training")
 train_losses, train_accuracies, test_losses, test_accuracies = model.train(
@@ -94,7 +117,7 @@ train_losses, train_accuracies, test_losses, test_accuracies = model.train(
     torch.nn.CrossEntropyLoss(),
     train_data_loader,
     test_data_loader,
-    epochs=kwargs['epoch'],
-    device=device
+    epochs=kwargs["epoch"],
+    device=device,
 )
 print("Completed Training")
