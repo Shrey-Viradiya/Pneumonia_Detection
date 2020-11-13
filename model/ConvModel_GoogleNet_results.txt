@@ -1,0 +1,10 @@
+BaseModel: GoogleNet
+Epochs: 3
+Train Dataloader Batch Size: 4
+Test Dataloader Batch Size: 4
+Params for Adam: {'lr': 1e-05, 'betas': (0.9, 0.999), 'eps': 1e-08, 'weight_decay': 0, 'amsgrad': False}
+Training Loss: 245.81219428265467
+Validation Loss: 29.864323986810632
+Training Accuracy: 93.15172152856603
+Testing Accuracy: 93.58974358974359
+Time Taken: 810.6678366661072 seconds
