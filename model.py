@@ -70,7 +70,7 @@ class CoronaDetection:
     Idea is to use transfer Learning
     """
 
-    def __init__(self, base_model="ResNet18", colab = False):
+    def __init__(self, base_model="ResNet18", colab=False):
         assert base_model in [
             "ResNet18",
             "ResNet34",
@@ -92,14 +92,16 @@ class CoronaDetection:
             self.colab_training = f"drive/My Drive/{self.base_model}"
         else:
             self.colab_training = "."
-        
+
         if not os.path.exists(f"{self.colab_training}/model"):
             os.mkdir(f"{self.colab_training}")
             os.mkdir(f"{self.colab_training}/model")
-        
+
         if os.path.exists(f"{self.colab_training}/model/ConvModel_{self.base_model}"):
             # check if the model is intialized before
-            self.model = torch.load(f"{self.colab_training}/model/ConvModel_{self.base_model}")
+            self.model = torch.load(
+                f"{self.colab_training}/model/ConvModel_{self.base_model}"
+            )
             # print(self.model)
         else:
             # If not initialized before
@@ -122,7 +124,9 @@ class CoronaDetection:
                 )
 
             # Save model
-            torch.save(self.model, f"{self.colab_training}/model/ConvModel_{self.base_model}")
+            torch.save(
+                self.model, f"{self.colab_training}/model/ConvModel_{self.base_model}"
+            )
 
         # get final model for using it in Class Activation Map
         self.final_layer = self.model._modules.get(
@@ -253,10 +257,14 @@ class CoronaDetection:
             # Save if it is better model than max_accuracy
             if testing_accuracy > max_accurracy:
                 max_accurracy = testing_accuracy
-                torch.save(self.model, f"{self.colab_training}/model/ConvModel_{self.base_model}")
+                torch.save(
+                    self.model,
+                    f"{self.colab_training}/model/ConvModel_{self.base_model}",
+                )
 
                 with open(
-                    f"{self.colab_training}/model/ConvModel_{self.base_model}_results.txt", "w"
+                    f"{self.colab_training}/model/ConvModel_{self.base_model}_results.txt",
+                    "w",
                 ) as f:
                     f.writelines(
                         [
@@ -264,7 +272,7 @@ class CoronaDetection:
                             f"Epochs: {epoch + 1}\n",
                             f"Train Dataloader Batch Size: {train_data.batch_size}\n",
                             f"Test Dataloader Batch Size: {test_data.batch_size}\n",
-                            f'Params for Optimizer: {optimizer.__repr__()}\n',
+                            f"Params for Optimizer: {optimizer.__repr__()}\n",
                             f"Training Loss: {training_loss}\n",
                             f"Validation Loss: {valid_loss}\n",
                             f"Training Accuracy: {training_accuracy}\n",
@@ -294,10 +302,22 @@ class CoronaDetection:
                     break
             previous_accuracy = testing_accuracy
 
-            np.save(f"{self.colab_training}/model/train_losses_{self.base_model}", train_losses)
-            np.save(f"{self.colab_training}/model/train_accuracies_{self.base_model}", train_accuracies)
-            np.save(f"{self.colab_training}/model/test_losses_{self.base_model}", test_losses)
-            np.save(f"{self.colab_training}/model/test_accuracies_{self.base_model}", test_accuracies)
+            np.save(
+                f"{self.colab_training}/model/train_losses_{self.base_model}",
+                train_losses,
+            )
+            np.save(
+                f"{self.colab_training}/model/train_accuracies_{self.base_model}",
+                train_accuracies,
+            )
+            np.save(
+                f"{self.colab_training}/model/test_losses_{self.base_model}",
+                test_losses,
+            )
+            np.save(
+                f"{self.colab_training}/model/test_accuracies_{self.base_model}",
+                test_accuracies,
+            )
 
     def test(self, loss_fun, test_data, device="cuda"):
         print("Starting Evaluating....")
@@ -336,7 +356,7 @@ class CoronaDetection:
 
         # open image
         image = Image.open(image_path_input)
-        image = image.convert('RGB')
+        image = image.convert("RGB")
         print(image.mode)
 
         tensor = img_test_transforms(image)
@@ -386,7 +406,7 @@ class CoronaDetection:
 
         overlay = getCAM(activated_features.features, weight_softmax, class_idx)
 
-        plt.figure(figsize=(32,15))
+        plt.figure(figsize=(32, 15))
         plt.subplot(1, 2, 1)
         plt.imshow(display_transform(image))
         plt.subplot(1, 2, 2)
