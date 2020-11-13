@@ -30,7 +30,6 @@ pretrained_models = {
 # Different image transformations for training, testing and displaying
 img_train_transforms = torchvision.transforms.Compose(
     [
-        torchvision.transforms.Resize((512, 512)),
         torchvision.transforms.RandomHorizontalFlip(),
         torchvision.transforms.RandomVerticalFlip(),
         torchvision.transforms.RandomPerspective(),
