@@ -112,7 +112,7 @@ optimizers = {
 optimizer = optimizers[kwargs["optimizer"]](model.model.parameters(), lr=learning_rate)
 
 print("Starting Training")
-train_losses, train_accuracies, test_losses, test_accuracies = model.train(
+model.train(
     optimizer,
     torch.nn.CrossEntropyLoss(),
     train_data_loader,
