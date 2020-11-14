@@ -5,7 +5,7 @@ import torch
 import torchvision
 import argparse
 
-from model import CoronaDetection, img_train_transforms, img_test_transforms
+from model import CoronaDetection
 
 DESCRIPTION = """
 Train the Corona Detection Model
@@ -69,15 +69,25 @@ kwargs = vars(parser.parse_args())
 
 print("Corona Detection Project")
 
+if torch.cuda.is_available():
+    print("Using GPU")
+    device = torch.device("cuda")
+else:
+    print("Using CPU")
+    device = torch.device("cpu")
+
+print("Creating Model Object: ")
+model = CoronaDetection(kwargs["base_model"], colab=kwargs["colab"])
+
 print("Setting up Data Directories")
 train_data_path = "./data/Corona_Classification_data/train/"
 train_data = torchvision.datasets.ImageFolder(
-    root=train_data_path, transform=img_train_transforms
+    root=train_data_path, transform=model.train_transformation
 )
 
 test_data_path = "./data/Corona_Classification_data/test/"
 test_data = torchvision.datasets.ImageFolder(
-    root=test_data_path, transform=img_test_transforms
+    root=test_data_path, transform=model.test_transformation
 )
 
 batch_size = kwargs["batch_size"]
@@ -89,15 +99,6 @@ test_data_loader = torch.utils.data.DataLoader(
     test_data, batch_size=batch_size, shuffle=True
 )
 
-if torch.cuda.is_available():
-    print("Using GPU")
-    device = torch.device("cuda")
-else:
-    print("Using CPU")
-    device = torch.device("cpu")
-
-print("Creating Model Object: ")
-model = CoronaDetection(kwargs["base_model"], colab=kwargs["colab"])
 
 learning_rate = kwargs["learning_rate"]
 
@@ -112,7 +113,7 @@ optimizers = {
 optimizer = optimizers[kwargs["optimizer"]](model.model.parameters(), lr=learning_rate)
 
 print("Starting Training")
-train_losses, train_accuracies, test_losses, test_accuracies = model.train(
+model.train(
     optimizer,
     torch.nn.CrossEntropyLoss(),
     train_data_loader,
