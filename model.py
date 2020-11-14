@@ -12,55 +12,19 @@ import skimage.transform
 
 # Dictionary for pretrained models and their last layer name
 pretrained_models = {
-    "ResNet18": [torchvision.models.resnet18, "layer4"],
-    "ResNet34": [torchvision.models.resnet34, "layer4"],
-    "ResNet50": [torchvision.models.resnet50, "layer4"],
-    "ResNet101": [torchvision.models.resnet101, "layer4"],
-    "ResNet152": [torchvision.models.resnet152, "layer4"],
-    "Alexnet": [torchvision.models.alexnet, "features"],
-    "VGG11": [torchvision.models.vgg11_bn, "features"],
-    "VGG13": [torchvision.models.vgg13_bn, "features"],
-    "VGG16": [torchvision.models.vgg16_bn, "features"],
-    "VGG19": [torchvision.models.vgg19_bn, "features"],
-    "GoogleNet": [torchvision.models.googlenet, "inception5b"],
-    "Inception": [torchvision.models.inception_v3, "Mixed_7c"],
+    "ResNet18": [torchvision.models.resnet18, "layer4", (224,224)],
+    "ResNet34": [torchvision.models.resnet34, "layer4", (224,224)],
+    "ResNet50": [torchvision.models.resnet50, "layer4", (224,224)],
+    "ResNet101": [torchvision.models.resnet101, "layer4", (224,224)],
+    "ResNet152": [torchvision.models.resnet152, "layer4", (224,224)],
+    "Alexnet": [torchvision.models.alexnet, "features", (256,256)],
+    "VGG11": [torchvision.models.vgg11_bn, "features", (224,224)],
+    "VGG13": [torchvision.models.vgg13_bn, "features", (224,224)],
+    "VGG16": [torchvision.models.vgg16_bn, "features", (224,224)],
+    "VGG19": [torchvision.models.vgg19_bn, "features", (224,224)],
+    "GoogleNet": [torchvision.models.googlenet, "inception5b", (224,224)],
+    "Inception": [torchvision.models.inception_v3, "Mixed_7c", (299,299)],
 }
-
-
-# Different image transformations for training, testing and displaying
-img_train_transforms = torchvision.transforms.Compose(
-    [
-        torchvision.transforms.RandomHorizontalFlip(),
-        torchvision.transforms.RandomVerticalFlip(),
-        torchvision.transforms.RandomPerspective(),
-        torchvision.transforms.RandomRotation(25),
-        torchvision.transforms.RandomResizedCrop(
-            (512, 512),
-            scale=(0.4, 1.0),
-            ratio=(0.5, 1.5),
-            interpolation=2,
-        ),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        ),
-    ]
-)
-
-display_transform = torchvision.transforms.Compose(
-    [torchvision.transforms.Resize((512, 512))]
-)
-
-img_test_transforms = torchvision.transforms.Compose(
-    [
-        torchvision.transforms.Resize((512, 512)),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        ),
-    ]
-)
-
 
 # The main model object
 class CoronaDetection:
@@ -130,6 +94,40 @@ class CoronaDetection:
         # get final model for using it in Class Activation Map
         self.final_layer = self.model._modules.get(
             pretrained_models[self.base_model][1]
+        )
+
+        # Different image transformations for training, testing and displaying
+        self.train_transformation = torchvision.transforms.Compose(
+            [
+                torchvision.transforms.RandomHorizontalFlip(),
+                torchvision.transforms.RandomVerticalFlip(),
+                torchvision.transforms.RandomPerspective(),
+                torchvision.transforms.RandomRotation(25),
+                torchvision.transforms.RandomResizedCrop(
+                    pretrained_models[self.base_model][2],
+                    scale=(0.4, 1.0),
+                    ratio=(0.5, 1.5),
+                    interpolation=2,
+                ),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+        self.test_transformation = torchvision.transforms.Compose(
+            [
+                torchvision.transforms.Resize(pretrained_models[self.base_model][2]),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+        self.display_transformation = torchvision.transforms.Compose(
+            [
+                torchvision.transforms.Resize(pretrained_models[self.base_model][2]),
+            ]
         )
 
     def train(
@@ -358,7 +356,7 @@ class CoronaDetection:
         image = image.convert("RGB")
         print(image.mode)
 
-        tensor = img_test_transforms(image)
+        tensor = self.test_transformation(image)
 
         prediction_var = torch.autograd.Variable(
             (tensor.unsqueeze(0)).cuda(), requires_grad=True
@@ -407,9 +405,9 @@ class CoronaDetection:
 
         plt.figure(figsize=(32, 15))
         plt.subplot(1, 2, 1)
-        plt.imshow(display_transform(image))
+        plt.imshow(self.display_transformation(image))
         plt.subplot(1, 2, 2)
-        plt.imshow(display_transform(image))
+        plt.imshow(self.display_transformation(image))
         plt.imshow(
             skimage.transform.resize(overlay[0], tensor.shape[1:3]),
             alpha=0.4,
