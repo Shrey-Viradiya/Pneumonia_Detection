@@ -90,5 +90,5 @@ files_to_be_deleted = ["1-s2.0-S1684118220300682-main.pdf-002-a1.png",
                     ]
 
 for filename in files_to_be_deleted:
-    os.remove("./data/Corona_Classification_data/train/INFECTED/{filename}")
+    os.remove(f"./data/Corona_Classification_data/train/INFECTED/{filename}")
 print("Cleaning Complete")
