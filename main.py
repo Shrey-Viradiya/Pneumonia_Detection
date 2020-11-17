@@ -108,10 +108,11 @@ if __name__ == "__main__":
         test_data, batch_size=batch_size, shuffle=True
     )
 
-
     learning_rate = kwargs["learning_rate"]
 
-    optimizer = optimizers[kwargs["optimizer"]](model.model.parameters(), lr=learning_rate)
+    optimizer = optimizers[kwargs["optimizer"]](
+        model.model.parameters(), lr=learning_rate
+    )
 
     print("Starting Training")
     model.train(
