@@ -197,7 +197,7 @@ class CoronaDetection:
                 train_correct += train_ccount
 
                 sys.stdout.write(
-                    f"\rEpoch {epoch+1}\t"
+                    f"\rEpoch {epoch+1:3d}\t"
                     f"Training Loss => {train_loss:.4f}\t"
                     f"Training Acc => "
                     f"{train_ccount/train_images.shape[0]*100:5.2f}"
@@ -238,7 +238,7 @@ class CoronaDetection:
             time_taken = time.time() - start
 
             print(
-                f"Epoch {epoch + 1}\t"
+                f"Epoch {epoch + 1:3d}\t"
                 f"Training Loss => {training_loss:.4f}\t"
                 f"Training Acc => {training_accuracy:5.2f}\t"
                 f"Test Loss => {valid_loss:.4f}\t"
@@ -266,7 +266,7 @@ class CoronaDetection:
                     f.writelines(
                         [
                             f"BaseModel: {self.base_model}\n",
-                            f"Epochs: {epoch + 1}\n",
+                            f"Epochs: {epoch + 1:3d}\n",
                             f"Train Dataloader Batch Size: {train_data.batch_size}\n",
                             f"Test Dataloader Batch Size: {test_data.batch_size}\n",
                             f"Params for Optimizer: {optimizer.__repr__()}\n",
@@ -289,7 +289,7 @@ class CoronaDetection:
                 elif previous_accuracy > testing_accuracy:
                     print(f"Early Stopping....")
                     print(
-                        f"Epoch {epoch + 1}\t"
+                        f"Epoch {epoch + 1:3d}\t"
                         f"Training Loss => {training_loss:.4f}\t"
                         f"Training accuracy => {training_accuracy:5.2f}\t"
                         f"Test Loss => {valid_loss:.4f}\t"
