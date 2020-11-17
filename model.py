@@ -197,10 +197,10 @@ class CoronaDetection:
                 train_correct += train_ccount
 
                 sys.stdout.write(
-                    f"\rEpoch {epoch+1:3d}\t"
-                    f"Train Loss => {train_loss:.4f} "
+                    f"\rEpoch {epoch+1:03d}\t"
+                    f"Train Loss => {train_loss:07.4f} "
                     f"Train Accuracy => "
-                    f"{train_ccount/train_images.shape[0]*100:5.2f}"
+                    f"{train_ccount/train_images.shape[0]*100:05.2f}"
                 )
 
             training_accuracy = train_correct / train_total * 100
@@ -252,15 +252,15 @@ class CoronaDetection:
             time_taken = time.time() - start
 
             print(
-                f"Epoch {epoch + 1:3d}\t"
-                f"Train Loss => {training_loss:.4f} "
-                f"Train Accuracy => {training_accuracy:5.2f} "
-                f"Test Loss => {valid_loss:.4f} "
-                f"Test Accuracy => {testing_accuracy:5.2f} "
-                f"Test Precision => {testing_precision:5.2f} "
-                f"Test Recall => {testing_recall:5.2f} "
-                f"Test F1 Score => {testing_f1:5.2f} "
-                f"Time Taken => {time_taken:5.2f}"
+                f"Epoch {epoch + 1:03d}\t"
+                f"Train Loss => {training_loss:07.4f} "
+                f"Train Accuracy => {training_accuracy:05.2f} "
+                f"Test Loss => {valid_loss:07.4f} "
+                f"Test Accuracy => {testing_accuracy:05.2f} "
+                f"Test Precision => {testing_precision:05.2f} "
+                f"Test Recall => {testing_recall:05.2f} "
+                f"Test F1 Score => {testing_f1:05.2f} "
+                f"Time Taken => {time_taken:07.4f}"
             )
 
             train_losses.append(training_loss)
@@ -283,18 +283,18 @@ class CoronaDetection:
                     f.writelines(
                         [
                             f"BaseModel: {self.base_model}\n",
-                            f"Epochs: {epoch + 1:3d}\n",
+                            f"Epochs: {epoch + 1:03d}\n",
                             f"Train Dataloader Batch Size: {train_data.batch_size}\n",
                             f"Test Dataloader Batch Size: {test_data.batch_size}\n",
                             f"Params for Optimizer: {optimizer.__repr__()}\n",
-                            f"Train Loss: {training_loss}\n",
-                            f"Test Loss: {valid_loss}\n",
-                            f"Train Accuracy: {training_accuracy}\n",
-                            f"Test Accuracy: {testing_accuracy:5.2f}\n",
-                            f"Test Precision: {testing_precision:5.2f}\n",
-                            f"Test Recall: {testing_recall:5.2f}\n",
-                            f"Test F1 Score: {testing_f1:5.2f}\n",
-                            f"Time Taken: {time_taken} seconds",
+                            f"Train Loss: {training_loss:07.4f}\n",
+                            f"Test Loss: {valid_loss:07.4f}\n",
+                            f"Train Accuracy: {training_accuracy:05.2f}\n",
+                            f"Test Accuracy: {testing_accuracy:05.2f}\n",
+                            f"Test Precision: {testing_precision:05.2f}\n",
+                            f"Test Recall: {testing_recall:05.2f}\n",
+                            f"Test F1 Score: {testing_f1:05.2f}\n",
+                            f"Time Taken: {time_taken:07.4f} seconds",
                         ]
                     )
 
@@ -309,15 +309,15 @@ class CoronaDetection:
                 elif previous_accuracy > testing_accuracy:
                     print(f"Early Stopping....")
                     print(
-                        f"Epoch {epoch + 1:3d}\t"
-                        f"Train Loss => {training_loss:.4f} "
-                        f"Train accuracy => {training_accuracy:5.2f} "
-                        f"Test Loss => {valid_loss:.4f} "
-                        f"Test Accuracy => {testing_accuracy:5.2f} "
-                        f"Test Precision => {testing_precision:5.2f} "
-                        f"Test Recall => {testing_recall:5.2f} "
-                        f"Test F1 Score => {testing_f1:5.2f} "
-                        f"Time Taken => {time_taken:.2f}"
+                        f"Epoch {epoch + 1:03d}\t"
+                        f"Train Loss => {training_loss:07.4f} "
+                        f"Train accuracy => {training_accuracy:05.2f} "
+                        f"Test Loss => {valid_loss:07.4f} "
+                        f"Test Accuracy => {testing_accuracy:05.2f} "
+                        f"Test Precision => {testing_precision:05.2f} "
+                        f"Test Recall => {testing_recall:05.2f} "
+                        f"Test F1 Score => {testing_f1:05.2f} "
+                        f"Time Taken => {time_taken:07.4f}"
                     )
                     break
             previous_accuracy = testing_accuracy
@@ -378,12 +378,12 @@ class CoronaDetection:
         )
 
         print(
-            f"Test Loss => {test_loss:.5f} "
-            f"Test accuracy => {testing_accuracy:5.2f} "
-            f"Test Precision => {testing_precision:5.2f} "
-            f"Test Recall => {testing_recall:5.2f} "
-            f"Test F1 Score => {testing_f1:5.2f} "
-            f"Time Taken => {time.time() - start:.2f}"
+            f"Test Loss => {test_loss:07.4f} "
+            f"Test accuracy => {testing_accuracy:05.2f} "
+            f"Test Precision => {testing_precision:05.2f} "
+            f"Test Recall => {testing_recall:05.2f} "
+            f"Test F1 Score => {testing_f1:05.2f} "
+            f"Time Taken => {time.time() - start:07.4f}"
         )
 
     def CAM(self, image_path_input, overlay_path_output, device="cuda"):
