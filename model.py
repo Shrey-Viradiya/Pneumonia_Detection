@@ -12,18 +12,18 @@ import skimage.transform
 
 # Dictionary for pretrained models and their last layer name
 pretrained_models = {
-    "ResNet18": [torchvision.models.resnet18, "layer4", (224,224)],
-    "ResNet34": [torchvision.models.resnet34, "layer4", (224,224)],
-    "ResNet50": [torchvision.models.resnet50, "layer4", (224,224)],
-    "ResNet101": [torchvision.models.resnet101, "layer4", (224,224)],
-    "ResNet152": [torchvision.models.resnet152, "layer4", (224,224)],
-    "Alexnet": [torchvision.models.alexnet, "features", (256,256)],
-    "VGG11": [torchvision.models.vgg11_bn, "features", (224,224)],
-    "VGG13": [torchvision.models.vgg13_bn, "features", (224,224)],
-    "VGG16": [torchvision.models.vgg16_bn, "features", (224,224)],
-    "VGG19": [torchvision.models.vgg19_bn, "features", (224,224)],
-    "GoogleNet": [torchvision.models.googlenet, "inception5b", (224,224)],
-    "Inception": [torchvision.models.inception_v3, "Mixed_7c", (299,299)],
+    "ResNet18": [torchvision.models.resnet18, "layer4", (224, 224)],
+    "ResNet34": [torchvision.models.resnet34, "layer4", (224, 224)],
+    "ResNet50": [torchvision.models.resnet50, "layer4", (224, 224)],
+    "ResNet101": [torchvision.models.resnet101, "layer4", (224, 224)],
+    "ResNet152": [torchvision.models.resnet152, "layer4", (224, 224)],
+    "Alexnet": [torchvision.models.alexnet, "features", (256, 256)],
+    "VGG11": [torchvision.models.vgg11_bn, "features", (224, 224)],
+    "VGG13": [torchvision.models.vgg13_bn, "features", (224, 224)],
+    "VGG16": [torchvision.models.vgg16_bn, "features", (224, 224)],
+    "VGG19": [torchvision.models.vgg19_bn, "features", (224, 224)],
+    "GoogleNet": [torchvision.models.googlenet, "inception5b", (224, 224)],
+    "Inception": [torchvision.models.inception_v3, "Mixed_7c", (299, 299)],
 }
 
 # The main model object
@@ -239,7 +239,12 @@ class CoronaDetection:
             testing_accuracy = test_correct / test_total * 100
             testing_precision = tp / (tp + fp) * 100
             testing_recall = tp / (tp + fn) * 100
-            testing_f1 = 2.0 * testing_recall * testing_precision / (testing_recall + testing_precision)
+            testing_f1 = (
+                2.0
+                * testing_recall
+                * testing_precision
+                / (testing_recall + testing_precision)
+            )
 
             sys.stdout.flush()
             sys.stdout.write("\r")
@@ -365,7 +370,12 @@ class CoronaDetection:
         testing_accuracy = correct / total * 100
         testing_precision = tp / (tp + fp) * 100
         testing_recall = tp / (tp + fn) * 100
-        testing_f1 = 2.0 * testing_recall * testing_precision / (testing_recall + testing_precision)
+        testing_f1 = (
+            2.0
+            * testing_recall
+            * testing_precision
+            / (testing_recall + testing_precision)
+        )
 
         print(
             f"Test Loss => {test_loss:.5f} "
