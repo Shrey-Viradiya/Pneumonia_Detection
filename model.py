@@ -198,8 +198,8 @@ class CoronaDetection:
 
                 sys.stdout.write(
                     f"\rEpoch {epoch+1:3d}\t"
-                    f"Training Loss => {train_loss:.4f}\t"
-                    f"Training Acc => "
+                    f"Train Loss => {train_loss:.4f} "
+                    f"Train Accuracy => "
                     f"{train_ccount/train_images.shape[0]*100:5.2f}"
                 )
 
@@ -247,7 +247,7 @@ class CoronaDetection:
             time_taken = time.time() - start
 
             print(
-                f"Epoch {epoch + 1:3d} "
+                f"Epoch {epoch + 1:3d}\t"
                 f"Train Loss => {training_loss:.4f} "
                 f"Train Accuracy => {training_accuracy:5.2f} "
                 f"Test Loss => {valid_loss:.4f} "
@@ -304,7 +304,7 @@ class CoronaDetection:
                 elif previous_accuracy > testing_accuracy:
                     print(f"Early Stopping....")
                     print(
-                        f"Epoch {epoch + 1:3d} "
+                        f"Epoch {epoch + 1:3d}\t"
                         f"Train Loss => {training_loss:.4f} "
                         f"Train accuracy => {training_accuracy:5.2f} "
                         f"Test Loss => {valid_loss:.4f} "
@@ -369,7 +369,7 @@ class CoronaDetection:
 
         print(
             f"Test Loss => {test_loss:.5f} "
-            f"Test accuracy => {testing_accuracy:.2f} "
+            f"Test accuracy => {testing_accuracy:5.2f} "
             f"Test Precision => {testing_precision:5.2f} "
             f"Test Recall => {testing_recall:5.2f} "
             f"Test F1 Score => {testing_f1:5.2f} "
