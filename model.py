@@ -210,6 +210,9 @@ class CoronaDetection:
             test_total = 0
             misses = 0
             previous_accuracy = 0
+            tp = 0
+            fp = 0
+            fn = 0
 
             # Test over batches
             self.model.train(mode=False)
@@ -228,9 +231,15 @@ class CoronaDetection:
 
                     test_total += test_labels.size(0)
                     test_ccount = (test_predicted == test_labels).sum().item()
+                    tp += ((test_labels == 1) & ((test_predicted) == 1)).sum().item()
+                    fn += ((test_labels != 0) & ((test_predicted) == 0)).sum().item()
+                    fp += ((test_labels != 1) & ((test_predicted) == 1)).sum().item()
                     test_correct += test_ccount
 
             testing_accuracy = test_correct / test_total * 100
+            testing_precision = tp / (tp + fp) * 100
+            testing_recall = tp / (tp + fn) * 100
+            testing_f1 = 2.0 * testing_recall * testing_precision / (testing_recall + testing_precision)
 
             sys.stdout.flush()
             sys.stdout.write("\r")
@@ -238,11 +247,14 @@ class CoronaDetection:
             time_taken = time.time() - start
 
             print(
-                f"Epoch {epoch + 1:3d}\t"
-                f"Training Loss => {training_loss:.4f}\t"
-                f"Training Acc => {training_accuracy:5.2f}\t"
-                f"Test Loss => {valid_loss:.4f}\t"
-                f"Test Acc => {testing_accuracy:5.2f}\t"
+                f"Epoch {epoch + 1:3d} "
+                f"Training Loss => {training_loss:.4f} "
+                f"Training Acc => {training_accuracy:5.2f} "
+                f"Test Loss => {valid_loss:.4f} "
+                f"Accuracy => {testing_accuracy:5.2f} "
+                f"Precision => {testing_precision:5.2f} "
+                f"Recall => {testing_recall:5.2f} "
+                f"F1 Score => {testing_f1:5.2f}"
                 f"Time Taken => {time_taken:5.2f}"
             )
 
