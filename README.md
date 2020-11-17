@@ -1,6 +1,6 @@
-# Corona Detection
+# Pneumonia  Detection
 
-This repository contains code for corona detection using X-ray images of the lungs.
+This repository contains code for pneumonia detection using X-ray images of the lungs.
 
 Link for the dataset is https://www.kaggle.com/praveengovi/coronahack-chest-xraydataset
 
