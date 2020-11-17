@@ -138,6 +138,6 @@ read BATCH_SIZE
 echo -n "Enter the number of epochs for which you wanna train your model: "
 read EPOCH
 
-python3 main.py --base_model $MODEL --optimizer $OPTIM --learning_rate $LR --batch_size $BATCH_SIZE --epoch $EPOCH
+python3 main.py --base_model $MODEL --optimizer $OPTIM --learning_rate $LR --batch_size $BATCH_SIZE --epoch $EPOCH --colab
 
 echo -e "\n\n \t Training Successful! \t \n\n"
