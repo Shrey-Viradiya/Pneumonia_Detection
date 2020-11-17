@@ -248,13 +248,13 @@ class CoronaDetection:
 
             print(
                 f"Epoch {epoch + 1:3d} "
-                f"Training Loss => {training_loss:.4f} "
-                f"Training Acc => {training_accuracy:5.2f} "
+                f"Train Loss => {training_loss:.4f} "
+                f"Train Accuracy => {training_accuracy:5.2f} "
                 f"Test Loss => {valid_loss:.4f} "
-                f"Accuracy => {testing_accuracy:5.2f} "
-                f"Precision => {testing_precision:5.2f} "
-                f"Recall => {testing_recall:5.2f} "
-                f"F1 Score => {testing_f1:5.2f}"
+                f"Test Accuracy => {testing_accuracy:5.2f} "
+                f"Test Precision => {testing_precision:5.2f} "
+                f"Test Recall => {testing_recall:5.2f} "
+                f"Test F1 Score => {testing_f1:5.2f} "
                 f"Time Taken => {time_taken:5.2f}"
             )
 
@@ -282,10 +282,13 @@ class CoronaDetection:
                             f"Train Dataloader Batch Size: {train_data.batch_size}\n",
                             f"Test Dataloader Batch Size: {test_data.batch_size}\n",
                             f"Params for Optimizer: {optimizer.__repr__()}\n",
-                            f"Training Loss: {training_loss}\n",
-                            f"Validation Loss: {valid_loss}\n",
-                            f"Training Accuracy: {training_accuracy}\n",
-                            f"Testing Accuracy: {testing_accuracy}\n",
+                            f"Train Loss: {training_loss}\n",
+                            f"Test Loss: {valid_loss}\n",
+                            f"Train Accuracy: {training_accuracy}\n",
+                            f"Test Accuracy: {testing_accuracy:5.2f}\n",
+                            f"Test Precision: {testing_precision:5.2f}\n",
+                            f"Test Recall: {testing_recall:5.2f}\n",
+                            f"Test F1 Score: {testing_f1:5.2f}\n",
                             f"Time Taken: {time_taken} seconds",
                         ]
                     )
@@ -301,11 +304,14 @@ class CoronaDetection:
                 elif previous_accuracy > testing_accuracy:
                     print(f"Early Stopping....")
                     print(
-                        f"Epoch {epoch + 1:3d}\t"
-                        f"Training Loss => {training_loss:.4f}\t"
-                        f"Training accuracy => {training_accuracy:5.2f}\t"
-                        f"Test Loss => {valid_loss:.4f}\t"
-                        f"Testing accuracy => {testing_accuracy:5.2f}\t"
+                        f"Epoch {epoch + 1:3d} "
+                        f"Train Loss => {training_loss:.4f} "
+                        f"Train accuracy => {training_accuracy:5.2f} "
+                        f"Test Loss => {valid_loss:.4f} "
+                        f"Test Accuracy => {testing_accuracy:5.2f} "
+                        f"Test Precision => {testing_precision:5.2f} "
+                        f"Test Recall => {testing_recall:5.2f} "
+                        f"Test F1 Score => {testing_f1:5.2f} "
                         f"Time Taken => {time_taken:.2f}"
                     )
                     break
@@ -335,6 +341,9 @@ class CoronaDetection:
         test_loss = 0.0
         correct = 0
         total = 0
+        tp = 0
+        fp = 0
+        fn = 0
 
         # Without changing parameters
         with torch.no_grad():
@@ -350,11 +359,20 @@ class CoronaDetection:
                 _, predicted = torch.max(output.data, 1)
                 total += test_labels.size(0)
                 correct += (predicted == test_labels).sum().item()
+                tp += ((test_labels == 1) & ((predicted) == 1)).sum().item()
+                fn += ((test_labels != 0) & ((predicted) == 0)).sum().item()
+                fp += ((test_labels != 1) & ((predicted) == 1)).sum().item()
         testing_accuracy = correct / total * 100
+        testing_precision = tp / (tp + fp) * 100
+        testing_recall = tp / (tp + fn) * 100
+        testing_f1 = 2.0 * testing_recall * testing_precision / (testing_recall + testing_precision)
 
         print(
-            f"Test Loss => {test_loss:.5f}\t"
-            f"Testing accuracy => {testing_accuracy:.2f}\t"
+            f"Test Loss => {test_loss:.5f} "
+            f"Test accuracy => {testing_accuracy:.2f} "
+            f"Test Precision => {testing_precision:5.2f} "
+            f"Test Recall => {testing_recall:5.2f} "
+            f"Test F1 Score => {testing_f1:5.2f} "
             f"Time Taken => {time.time() - start:.2f}"
         )
 
