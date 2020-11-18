@@ -1,0 +1,17 @@
+BaseModel: Inception
+Epochs: 10
+Train Dataloader Batch Size: 8
+Test Dataloader Batch Size: 8
+Params for Optimizer: Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 5e-05
+    weight_decay: 0
+)
+Training Loss: 60.43993617448723
+Validation Loss: 9.561595231294632
+Training Accuracy: 96.72720393492243
+Testing Accuracy: 96.31410256410257
+Time Taken: 323.41744327545166 seconds

@@ -12,18 +12,18 @@ import skimage.transform
 
 # Dictionary for pretrained models and their last layer name
 pretrained_models = {
-    "ResNet18": [torchvision.models.resnet18, "layer4", (224,224)],
-    "ResNet34": [torchvision.models.resnet34, "layer4", (224,224)],
-    "ResNet50": [torchvision.models.resnet50, "layer4", (224,224)],
-    "ResNet101": [torchvision.models.resnet101, "layer4", (224,224)],
-    "ResNet152": [torchvision.models.resnet152, "layer4", (224,224)],
-    "Alexnet": [torchvision.models.alexnet, "features", (256,256)],
-    "VGG11": [torchvision.models.vgg11_bn, "features", (224,224)],
-    "VGG13": [torchvision.models.vgg13_bn, "features", (224,224)],
-    "VGG16": [torchvision.models.vgg16_bn, "features", (224,224)],
-    "VGG19": [torchvision.models.vgg19_bn, "features", (224,224)],
-    "GoogleNet": [torchvision.models.googlenet, "inception5b", (224,224)],
-    "Inception": [torchvision.models.inception_v3, "Mixed_7c", (299,299)],
+    "ResNet18": [torchvision.models.resnet18, "layer4", (224, 224)],
+    "ResNet34": [torchvision.models.resnet34, "layer4", (224, 224)],
+    "ResNet50": [torchvision.models.resnet50, "layer4", (224, 224)],
+    "ResNet101": [torchvision.models.resnet101, "layer4", (224, 224)],
+    "ResNet152": [torchvision.models.resnet152, "layer4", (224, 224)],
+    "Alexnet": [torchvision.models.alexnet, "features", (256, 256)],
+    "VGG11": [torchvision.models.vgg11_bn, "features", (224, 224)],
+    "VGG13": [torchvision.models.vgg13_bn, "features", (224, 224)],
+    "VGG16": [torchvision.models.vgg16_bn, "features", (224, 224)],
+    "VGG19": [torchvision.models.vgg19_bn, "features", (224, 224)],
+    "GoogleNet": [torchvision.models.googlenet, "inception5b", (224, 224)],
+    "Inception": [torchvision.models.inception_v3, "Mixed_7c", (299, 299)],
 }
 
 # The main model object
@@ -197,10 +197,10 @@ class CoronaDetection:
                 train_correct += train_ccount
 
                 sys.stdout.write(
-                    f"\rEpoch {epoch+1}\t"
-                    f"Training Loss => {train_loss:.4f}\t"
-                    f"Training Acc => "
-                    f"{train_ccount/train_images.shape[0]*100:5.2f}"
+                    f"\rEpoch {epoch+1:03d}\t"
+                    f"Train Loss => {train_loss:08.4f} "
+                    f"Train Accuracy => "
+                    f"{train_ccount/train_images.shape[0]*100:06.2f}"
                 )
 
             training_accuracy = train_correct / train_total * 100
@@ -210,6 +210,9 @@ class CoronaDetection:
             test_total = 0
             misses = 0
             previous_accuracy = 0
+            tp = 0
+            fp = 0
+            fn = 0
 
             # Test over batches
             self.model.train(mode=False)
@@ -228,9 +231,20 @@ class CoronaDetection:
 
                     test_total += test_labels.size(0)
                     test_ccount = (test_predicted == test_labels).sum().item()
+                    tp += ((test_labels == 1) & ((test_predicted) == 1)).sum().item()
+                    fn += ((test_labels != 0) & ((test_predicted) == 0)).sum().item()
+                    fp += ((test_labels != 1) & ((test_predicted) == 1)).sum().item()
                     test_correct += test_ccount
 
             testing_accuracy = test_correct / test_total * 100
+            testing_precision = tp / (tp + fp) * 100
+            testing_recall = tp / (tp + fn) * 100
+            testing_f1 = (
+                2.0
+                * testing_recall
+                * testing_precision
+                / (testing_recall + testing_precision)
+            )
 
             sys.stdout.flush()
             sys.stdout.write("\r")
@@ -238,12 +252,15 @@ class CoronaDetection:
             time_taken = time.time() - start
 
             print(
-                f"Epoch {epoch + 1}\t"
-                f"Training Loss => {training_loss:.4f}\t"
-                f"Training Acc => {training_accuracy:5.2f}\t"
-                f"Test Loss => {valid_loss:.4f}\t"
-                f"Test Acc => {testing_accuracy:5.2f}\t"
-                f"Time Taken => {time_taken:5.2f}"
+                f"Epoch {epoch + 1:03d}\t"
+                f"Train Loss => {training_loss:08.4f} "
+                f"Train Accuracy => {training_accuracy:06.2f} "
+                f"Test Loss => {valid_loss:08.4f} "
+                f"Test Accuracy => {testing_accuracy:06.2f} "
+                f"Test Precision => {testing_precision:06.2f} "
+                f"Test Recall => {testing_recall:06.2f} "
+                f"Test F1 Score => {testing_f1:06.2f} "
+                f"Time Taken => {time_taken:08.4f}"
             )
 
             train_losses.append(training_loss)
@@ -266,15 +283,18 @@ class CoronaDetection:
                     f.writelines(
                         [
                             f"BaseModel: {self.base_model}\n",
-                            f"Epochs: {epoch + 1}\n",
+                            f"Epochs: {epoch + 1:03d}\n",
                             f"Train Dataloader Batch Size: {train_data.batch_size}\n",
                             f"Test Dataloader Batch Size: {test_data.batch_size}\n",
                             f"Params for Optimizer: {optimizer.__repr__()}\n",
-                            f"Training Loss: {training_loss}\n",
-                            f"Validation Loss: {valid_loss}\n",
-                            f"Training Accuracy: {training_accuracy}\n",
-                            f"Testing Accuracy: {testing_accuracy}\n",
-                            f"Time Taken: {time_taken} seconds",
+                            f"Train Loss: {training_loss:08.4f}\n",
+                            f"Test Loss: {valid_loss:08.4f}\n",
+                            f"Train Accuracy: {training_accuracy:06.2f}\n",
+                            f"Test Accuracy: {testing_accuracy:06.2f}\n",
+                            f"Test Precision: {testing_precision:06.2f}\n",
+                            f"Test Recall: {testing_recall:06.2f}\n",
+                            f"Test F1 Score: {testing_f1:06.2f}\n",
+                            f"Time Taken: {time_taken:08.4f} seconds",
                         ]
                     )
 
@@ -289,12 +309,15 @@ class CoronaDetection:
                 elif previous_accuracy > testing_accuracy:
                     print(f"Early Stopping....")
                     print(
-                        f"Epoch {epoch + 1}\t"
-                        f"Training Loss => {training_loss:.4f}\t"
-                        f"Training accuracy => {training_accuracy:5.2f}\t"
-                        f"Test Loss => {valid_loss:.4f}\t"
-                        f"Testing accuracy => {testing_accuracy:5.2f}\t"
-                        f"Time Taken => {time_taken:.2f}"
+                        f"Epoch {epoch + 1:03d}\t"
+                        f"Train Loss => {training_loss:08.4f} "
+                        f"Train accuracy => {training_accuracy:06.2f} "
+                        f"Test Loss => {valid_loss:08.4f} "
+                        f"Test Accuracy => {testing_accuracy:06.2f} "
+                        f"Test Precision => {testing_precision:06.2f} "
+                        f"Test Recall => {testing_recall:06.2f} "
+                        f"Test F1 Score => {testing_f1:06.2f} "
+                        f"Time Taken => {time_taken:08.4f}"
                     )
                     break
             previous_accuracy = testing_accuracy
@@ -323,6 +346,9 @@ class CoronaDetection:
         test_loss = 0.0
         correct = 0
         total = 0
+        tp = 0
+        fp = 0
+        fn = 0
 
         # Without changing parameters
         with torch.no_grad():
@@ -338,12 +364,26 @@ class CoronaDetection:
                 _, predicted = torch.max(output.data, 1)
                 total += test_labels.size(0)
                 correct += (predicted == test_labels).sum().item()
+                tp += ((test_labels == 1) & ((predicted) == 1)).sum().item()
+                fn += ((test_labels != 0) & ((predicted) == 0)).sum().item()
+                fp += ((test_labels != 1) & ((predicted) == 1)).sum().item()
         testing_accuracy = correct / total * 100
+        testing_precision = tp / (tp + fp) * 100
+        testing_recall = tp / (tp + fn) * 100
+        testing_f1 = (
+            2.0
+            * testing_recall
+            * testing_precision
+            / (testing_recall + testing_precision)
+        )
 
         print(
-            f"Test Loss => {test_loss:.5f}\t"
-            f"Testing accuracy => {testing_accuracy:.2f}\t"
-            f"Time Taken => {time.time() - start:.2f}"
+            f"Test Loss => {test_loss:08.4f} "
+            f"Test accuracy => {testing_accuracy:06.2f} "
+            f"Test Precision => {testing_precision:06.2f} "
+            f"Test Recall => {testing_recall:06.2f} "
+            f"Test F1 Score => {testing_f1:06.2f} "
+            f"Time Taken => {time.time() - start:08.4f}"
         )
 
     def CAM(self, image_path_input, overlay_path_output, device="cuda"):
