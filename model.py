@@ -55,17 +55,21 @@ class CoronaDetection:
             self.colab_training = f"drive/My Drive/{self.base_model}"
         else:
             self.colab_training = "."
-
-        if not os.path.exists(f"{self.colab_training}/model"):
+            
+        if not os.path.exists(f"{self.colab_training}"):
             os.mkdir(f"{self.colab_training}")
-            os.mkdir(f"{self.colab_training}/model")
 
-        if os.path.exists(f"{self.colab_training}/model/ConvModel_{self.base_model}"):
+        if not os.path.exists(f"{self.colab_training}/model_objects"):
+            os.mkdir(f"{self.colab_training}/model_objects")
+
+        if not os.path.exists(f"{self.colab_training}/model_metadata"):
+            os.mkdir(f"{self.colab_training}/model_metadata")
+
+        if os.path.exists(f"{self.colab_training}/model_objects/ConvModel_{self.base_model}"):
             # check if the model is intialized before
             self.model = torch.load(
-                f"{self.colab_training}/model/ConvModel_{self.base_model}"
+                f"{self.colab_training}/model_objects/ConvModel_{self.base_model}"
             )
-            # print(self.model)
         else:
             # If not initialized before
             # Download it and save it
@@ -88,7 +92,7 @@ class CoronaDetection:
 
             # Save model
             torch.save(
-                self.model, f"{self.colab_training}/model/ConvModel_{self.base_model}"
+                self.model, f"{self.colab_training}/model_objects/ConvModel_{self.base_model}"
             )
 
         # get final model for using it in Class Activation Map
@@ -273,11 +277,11 @@ class CoronaDetection:
                 max_accurracy = testing_accuracy
                 torch.save(
                     self.model,
-                    f"{self.colab_training}/model/ConvModel_{self.base_model}",
+                    f"{self.colab_training}/model_objects/ConvModel_{self.base_model}",
                 )
 
                 with open(
-                    f"{self.colab_training}/model/ConvModel_{self.base_model}_results.txt",
+                    f"{self.colab_training}/model_objects/ConvModel_{self.base_model}_results.txt",
                     "w",
                 ) as f:
                     f.writelines(
@@ -323,19 +327,19 @@ class CoronaDetection:
             previous_accuracy = testing_accuracy
 
             np.save(
-                f"{self.colab_training}/model/train_losses_{self.base_model}",
+                f"{self.colab_training}/model_metadata/train_losses_{self.base_model}",
                 train_losses,
             )
             np.save(
-                f"{self.colab_training}/model/train_accuracies_{self.base_model}",
+                f"{self.colab_training}/model_metadata/train_accuracies_{self.base_model}",
                 train_accuracies,
             )
             np.save(
-                f"{self.colab_training}/model/test_losses_{self.base_model}",
+                f"{self.colab_training}/model_metadata/test_losses_{self.base_model}",
                 test_losses,
             )
             np.save(
-                f"{self.colab_training}/model/test_accuracies_{self.base_model}",
+                f"{self.colab_training}/model_metadata/test_accuracies_{self.base_model}",
                 test_accuracies,
             )
 
