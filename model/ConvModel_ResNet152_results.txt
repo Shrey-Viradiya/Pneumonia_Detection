@@ -1,0 +1,18 @@
+BaseModel: ResNet152
+Epochs: 54
+Train Dataloader Batch Size: 8
+Test Dataloader Batch Size: 8
+Params for Optimizer: RMSprop (
+Parameter Group 0
+    alpha: 0.99
+    centered: False
+    eps: 1e-08
+    lr: 5e-05
+    momentum: 0
+    weight_decay: 0
+)
+Training Loss: 29.79458278471077
+Validation Loss: 14.060318960315271
+Training Accuracy: 98.35414301929626
+Testing Accuracy: 95.99358974358975
+Time Taken: 371.34974551200867 seconds
