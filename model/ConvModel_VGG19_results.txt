@@ -1,0 +1,18 @@
+BaseModel: VGG19
+Epochs: 43
+Train Dataloader Batch Size: 8
+Test Dataloader Batch Size: 8
+Params for Optimizer: RMSprop (
+Parameter Group 0
+    alpha: 0.99
+    centered: False
+    eps: 1e-08
+    lr: 5e-05
+    momentum: 0
+    weight_decay: 0
+)
+Training Loss: 55.368631195902935
+Validation Loss: 11.046434194402536
+Training Accuracy: 97.50283768444949
+Testing Accuracy: 96.15384615384616
+Time Taken: 362.8677489757538 seconds
