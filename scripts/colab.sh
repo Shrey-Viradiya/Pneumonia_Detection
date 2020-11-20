@@ -1,5 +1,4 @@
-# go to the parent directory on google colab
-cd /content/
+cd /content/Pneumonia_Detection
 
 # Set up some flags to verify later...
 HOMEDIR=`ls ~ -a`
@@ -28,23 +27,18 @@ fi
 
 # search this directory for other files and directories.
 CURRDIR=`ls -a`
-FLAGMASTER=0
 FLAGDATA=0
 FLAGMODEL=0
 SETUP_DONE=0
 
 for FILENAME in $CURRDIR
 do
-    # check if master is present
-    if [ $FILENAME == "Pneumonia_Detection-master.zip" ]
-    then
-        FLAGMASTER=1
     # check if data directory is present
-    elif [ $FILENAME == "data" ]
+    if [ $FILENAME == "data" ]
     then
         FLAGDATA=1
     # check if model is present
-    elif [ $FILENAME == "model" ]
+    elif [ $FILENAME == "model_objects" ]
     then
         FLAGMODEL=1
     # check if new API key is present
@@ -62,25 +56,14 @@ done
 if [ $FLAGKAGGLE -eq 0 ]
 then
     echo -n "Please enter your kaggle username: "
-    read USERNAME
+    read KAGGLEUSERNAME
     echo -n "Please enter your kaggle API key: "
     read KAGGLEKEY
-    echo "{\"username\": \"$USERNAME\", \"key\": \"$KAGGLEKEY\"}" > ./kaggle.json
+    echo "{\"username\": \"$KAGGLEUSERNAME\", \"key\": \"$KAGGLEKEY\"}" > ./kaggle.json
 fi
 
 # start setting up the repository.
 echo "Setting up the repository..."
-
-if [ $FLAGMASTER -eq 0 ]
-then
-    >&2 echo "Please download the master '.zip' file of the repository from github, upload it on google colab, and then try again."
-    exit 1
-fi
-
-# unzip stuff and move them to correct place.
-unzip -q Pneumonia_Detection-master.zip -d .
-mv Pneumonia_Detection-master/* .
-rm -rf Pneumonia_Detection-master
 
 # if data directory is present, we will ask user to either rewrite it
 # or keep it as it is.
@@ -92,23 +75,32 @@ then
     if [ $ANS == "y" ]
     then
         rm -rf data
-        if [ $FLAGMODEL -eq 1 ]
-        then
-            rm -rf model
-        fi
     elif [ $ANS == "n" ]
     then
-        echo "Setup successful!"
         SETUP_DONE=1
     else
         >&2 echo "Command not recognized. Exiting..."
         exit 1
     fi
-# delete the stale model directory, if necessary...
-elif [ $FLAGMODEL -eq 1 ]
+fi
+
+echo "Data Setup Done!"
+
+if [ $FLAGMODEL -eq 1 ]
 then
-    echo "Deleting stale 'model' directory."
-    rm -rf model
+    echo -n "A directory of saved models found. Do you want to use it to load models? [y/n] : "
+    read ANS
+    if [ $ANS == "n" ]
+    then
+        rm -rf model_objects
+        rm -rf model_metadata
+    elif [ $ANS == "y" ]
+    then
+        echo "Ok, I will use the models present in model_objects directory!"
+    else
+        >&2 echo "Command not recognized. Exiting..."
+        exit 1
+    fi
 fi
 
 if [ $SETUP_DONE -eq 0 ]
@@ -138,6 +130,6 @@ read BATCH_SIZE
 echo -n "Enter the number of epochs for which you wanna train your model: "
 read EPOCH
 
-python3 main.py --base_model $MODEL --optimizer $OPTIM --learning_rate $LR --batch_size $BATCH_SIZE --epoch $EPOCH --colab
+python3 main.py --base_model $MODEL --optimizer $OPTIM --learning_rate $LR --batch_size $BATCH_SIZE --epoch $EPOCH
 
 echo -e "\n\n \t Training Successful! \t \n\n"
