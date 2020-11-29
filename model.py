@@ -277,7 +277,7 @@ class CoronaDetection:
                 )
 
                 with open(
-                    f"{self.colab_training}/model/ConvModel_{self.base_model}_results.txt",
+                    f"{self.colab_training}/model_results/ConvModel_{self.base_model}_results.txt",
                     "w",
                 ) as f:
                     f.writelines(
