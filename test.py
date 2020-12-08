@@ -1,5 +1,6 @@
 import sys
 
+import numpy as np
 import torch
 import torchvision
 
@@ -25,4 +26,7 @@ test_data_loader = torch.utils.data.DataLoader(
 )
 
 # testing the data
-model.test(torch.nn.CrossEntropyLoss(), test_data_loader, device=device)
+predictions = model.test(torch.nn.CrossEntropyLoss(), test_data_loader, device=device)
+predictions = np.asarray(predictions)
+print(f"Number of 0 predictions: {np.sum(predictions == 0)}")
+print(f"Number of 1 predictions: {np.sum(predictions == 1)}")

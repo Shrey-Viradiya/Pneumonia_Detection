@@ -57,15 +57,15 @@ class CoronaDetection:
             self.colab_training = "."
 
         if not os.path.exists(f"{self.colab_training}/model"):
-            os.mkdir(f"{self.colab_training}")
             os.mkdir(f"{self.colab_training}/model")
+        if not os.path.exists(f"{self.colab_training}/model_results"):
+            os.mkdir(f"{self.colab_training}/model_results")
 
         if os.path.exists(f"{self.colab_training}/model/ConvModel_{self.base_model}"):
             # check if the model is intialized before
             self.model = torch.load(
                 f"{self.colab_training}/model/ConvModel_{self.base_model}"
             )
-            # print(self.model)
         else:
             # If not initialized before
             # Download it and save it
@@ -349,6 +349,7 @@ class CoronaDetection:
         tp = 0
         fp = 0
         fn = 0
+        predictions = []
 
         # Without changing parameters
         with torch.no_grad():
@@ -362,6 +363,7 @@ class CoronaDetection:
                 loss = loss_fun(output, test_labels)
                 test_loss += loss.item()
                 _, predicted = torch.max(output.data, 1)
+                predictions.extend(list(predicted))
                 total += test_labels.size(0)
                 correct += (predicted == test_labels).sum().item()
                 tp += ((test_labels == 1) & ((predicted) == 1)).sum().item()
@@ -385,6 +387,8 @@ class CoronaDetection:
             f"Test F1 Score => {testing_f1:06.2f} "
             f"Time Taken => {time.time() - start:08.4f}"
         )
+
+        return predictions
 
     def CAM(self, image_path_input, overlay_path_output, device="cuda"):
         """

@@ -37,13 +37,15 @@ do
     if [ $FILENAME == "data" ]
     then
         FLAGDATA=1
+    fi
     # check if model is present
-    elif [ $FILENAME == "model_objects" ]
+    if [ $FILENAME == "model" ]
     then
         FLAGMODEL=1
+    fi
     # check if new API key is present
     # if it is, we use it to rewrite the old key
-    elif [ $FILENAME == "kaggle.json" ]
+    if [ $FILENAME == "kaggle.json" ]
     then
         FLAGKAGGLE=1
         echo "Found new kaggle API key. Rewriting the previous key."
@@ -84,19 +86,17 @@ then
     fi
 fi
 
-echo "Data Setup Done!"
-
 if [ $FLAGMODEL -eq 1 ]
 then
     echo -n "A directory of saved models found. Do you want to use it to load models? [y/n] : "
     read ANS
     if [ $ANS == "n" ]
     then
-        rm -rf model_objects
-        rm -rf model_metadata
+        rm -rf model_results
+        rm -rf model
     elif [ $ANS == "y" ]
     then
-        echo "Ok, I will use the models present in model_objects directory!"
+        echo "Ok, I will use the models present in 'model' directory!"
     else
         >&2 echo "Command not recognized. Exiting..."
         exit 1
@@ -113,6 +113,8 @@ then
 
     echo "Data download and preprocessing successful!"
 fi
+
+echo "Data Setup Done!"
 
 # Let's start the training...
 echo "Choose one model to train from the following list."
