@@ -363,7 +363,7 @@ class CoronaDetection:
                 loss = loss_fun(output, test_labels)
                 test_loss += loss.item()
                 _, predicted = torch.max(output.data, 1)
-                predictions.extend(list(predicted))
+                predictions.extend(list(np.asarray(predicted.to('cpu'))))
                 total += test_labels.size(0)
                 correct += (predicted == test_labels).sum().item()
                 tp += ((test_labels == 1) & ((predicted) == 1)).sum().item()
