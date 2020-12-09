@@ -1,3 +1,4 @@
+import os
 import sys
 
 import numpy as np
@@ -22,11 +23,20 @@ test_data = torchvision.datasets.ImageFolder(
 )
 batch_size = 8
 test_data_loader = torch.utils.data.DataLoader(
-    test_data, batch_size=batch_size, shuffle=True
+    test_data, batch_size=batch_size, shuffle=False
 )
+
+# get all file names
+filenames = os.listdir(test_data)
 
 # testing the data
 predictions = model.test(torch.nn.CrossEntropyLoss(), test_data_loader, device=device)
-predictions = np.asarray(predictions)
-print(f"Number of 0 predictions: {np.sum(predictions == 0)}")
-print(f"Number of 1 predictions: {np.sum(predictions == 1)}")
+labels = ("Pneumonia", "Normal")
+predictions = [ labels[p] for p in predictions ]
+# print(f"Number of 0 predictions: {np.sum(predictions == 0)}")
+# print(f"Number of 1 predictions: {np.sum(predictions == 1)}")
+with open("test_predictions.csv", "w") as f:
+    f.write("Image, Prediction\n")
+    for i in range(len(predictions)):
+        f.write(f"{filename[i]}, {predictions[i]}\n")
+
