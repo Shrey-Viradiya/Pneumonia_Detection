@@ -339,7 +339,7 @@ class CoronaDetection:
                 test_accuracies,
             )
 
-    def test(self, loss_fun, test_data, device="cuda"):
+    def test(self, loss_fun, test_data, device="cuda", has_labels=False):
         print("Starting Evaluating....")
         start = time.time()
         self.model.eval()
@@ -357,36 +357,41 @@ class CoronaDetection:
             for batch in test_data:
                 test_images, test_labels = batch
                 test_images = test_images.to(device)
-                test_labels = test_labels.to(device)
+                if has_labels:
+                    test_labels = test_labels.to(device)
 
                 output = self.model(test_images)
-                loss = loss_fun(output, test_labels)
-                test_loss += loss.item()
+                if has_labels:
+                    loss = loss_fun(output, test_labels)
+                    test_loss += loss.item()
                 _, predicted = torch.max(output.data, 1)
-                predictions.extend(list(np.asarray(predicted.to('cpu'))))
-                total += test_labels.size(0)
-                correct += (predicted == test_labels).sum().item()
-                tp += ((test_labels == 1) & ((predicted) == 1)).sum().item()
-                fn += ((test_labels != 0) & ((predicted) == 0)).sum().item()
-                fp += ((test_labels != 1) & ((predicted) == 1)).sum().item()
-        testing_accuracy = correct / total * 100
-        testing_precision = tp / (tp + fp) * 100
-        testing_recall = tp / (tp + fn) * 100
-        testing_f1 = (
-            2.0
-            * testing_recall
-            * testing_precision
-            / (testing_recall + testing_precision)
-        )
+                predictions.extend(list(np.asarray(predicted.to("cpu"))))
+                if has_labels:
+                    total += test_labels.size(0)
+                    correct += (predicted == test_labels).sum().item()
+                    tp += ((test_labels == 1) & ((predicted) == 1)).sum().item()
+                    fn += ((test_labels != 0) & ((predicted) == 0)).sum().item()
+                    fp += ((test_labels != 1) & ((predicted) == 1)).sum().item()
 
-        print(
-            f"Test Loss => {test_loss:08.4f} "
-            f"Test accuracy => {testing_accuracy:06.2f} "
-            f"Test Precision => {testing_precision:06.2f} "
-            f"Test Recall => {testing_recall:06.2f} "
-            f"Test F1 Score => {testing_f1:06.2f} "
-            f"Time Taken => {time.time() - start:08.4f}"
-        )
+        if has_labels:
+            testing_accuracy = correct / total * 100
+            testing_precision = tp / (tp + fp) * 100
+            testing_recall = tp / (tp + fn) * 100
+            testing_f1 = (
+                2.0
+                * testing_recall
+                * testing_precision
+                / (testing_recall + testing_precision)
+            )
+
+            print(
+                f"Test Loss => {test_loss:08.4f} "
+                f"Test accuracy => {testing_accuracy:06.2f} "
+                f"Test Precision => {testing_precision:06.2f} "
+                f"Test Recall => {testing_recall:06.2f} "
+                f"Test F1 Score => {testing_f1:06.2f} "
+                f"Time Taken => {time.time() - start:08.4f}"
+            )
 
         return predictions
 

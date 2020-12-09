@@ -7,6 +7,15 @@ import torchvision
 
 from model import CoronaDetection
 
+if len(sys.argv) != 4:
+    print("usage: python test.py <data_directory_path> <model_name> <has_labels_flag>")
+    print("<data_directory_path>: Path to directory containing the test data")
+    print(
+        "<model_name>: Name of the trained model. See 'pretrained_models' for details"
+    )
+    print("<has_labels_flag>: Whether the directory contains test labels or not.")
+    exit(1)
+
 if torch.cuda.is_available():
     print("Using GPU")
     device = torch.device("cuda")
@@ -27,15 +36,28 @@ test_data_loader = torch.utils.data.DataLoader(
 )
 
 # get all file names
-dirname  = os.listdir(test_data_path)
+dirname = os.listdir(test_data_path)
 filename = []
 for d in dirname:
     filename.extend(os.listdir(os.path.join(test_data_path, d)))
 
 # testing the data
-predictions = model.test(torch.nn.CrossEntropyLoss(), test_data_loader, device=device)
+bool_dict = {
+    "True": True,
+    "False": False,
+    "true": True,
+    "false": False,
+    "t": True,
+    "f": False,
+}
+predictions = model.test(
+    torch.nn.CrossEntropyLoss(),
+    test_data_loader,
+    device=device,
+    has_labels=bool_dict[sys.argv[3]],
+)
 labels = ("Pneumonia", "Normal")
-predictions = [ labels[p] for p in predictions ]
+predictions = [labels[p] for p in predictions]
 
 # make the prediction file
 with open(f"test_predictions_{sys.argv[2]}.csv", "w") as f:
