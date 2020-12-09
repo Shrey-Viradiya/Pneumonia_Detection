@@ -27,16 +27,18 @@ test_data_loader = torch.utils.data.DataLoader(
 )
 
 # get all file names
-filenames = os.listdir(test_data)
+dirname  = os.listdir(test_data_path)
+filename = []
+for d in dirname:
+    filename.extend(os.listdir(os.path.join(test_data_path, d)))
 
 # testing the data
 predictions = model.test(torch.nn.CrossEntropyLoss(), test_data_loader, device=device)
 labels = ("Pneumonia", "Normal")
 predictions = [ labels[p] for p in predictions ]
-# print(f"Number of 0 predictions: {np.sum(predictions == 0)}")
-# print(f"Number of 1 predictions: {np.sum(predictions == 1)}")
-with open("test_predictions.csv", "w") as f:
+
+# make the prediction file
+with open(f"test_predictions_{sys.argv[2]}.csv", "w") as f:
     f.write("Image, Prediction\n")
     for i in range(len(predictions)):
         f.write(f"{filename[i]}, {predictions[i]}\n")
-
