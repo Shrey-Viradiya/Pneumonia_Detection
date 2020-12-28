@@ -1,6 +1,6 @@
 # Pneumonia  Detection
 
-This repository contains code for pneumonia detection using X-ray images of the lungs.
+This repository contains code for pneumonia detection using X-ray images of the lungs. Test accuracy achieved (highest) : 96.5 %
 
 [Link for the dataset](https://www.kaggle.com/praveengovi/coronahack-chest-xraydataset)
 
