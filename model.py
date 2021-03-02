@@ -165,7 +165,6 @@ class CoronaDetection:
             start = time.time()
 
             training_loss = 0.0
-            valid_loss = 0.0
 
             train_correct = 0
             train_total = 0
