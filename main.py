@@ -111,12 +111,12 @@ if __name__ == "__main__":
         assert DATA_SIZE != 0
         assert VALIDATION_SIZE != 0
 
-        dali_iter = DALIClassificationIterator([pipe], size=ITERATIONS_PER_EPOCH)
+        train_data_loader = DALIClassificationIterator([pipe], size=ITERATIONS_PER_EPOCH)
 
         pipe2 = HybridPipelineTest(batch_size=batch_size, output_size = list(pretrained_models[kwargs["base_model"]][2]), num_threads=2, device_id=0, images_directory=test_data_path)
         pipe2.build()
 
-        valid_iter = DALIClassificationIterator([pipe2], size=VALIDATION_STEPS)
+        test_data_loader = DALIClassificationIterator([pipe2], size=VALIDATION_STEPS)
     else:
         print("Setting up Data Directories")
         
@@ -141,26 +141,14 @@ if __name__ == "__main__":
         model.model.parameters(), lr=learning_rate
     )
 
-    print("Starting Training")
-
-    if kwargs["nvidiadali"]:
-        model.train(
-            optimizer,
-            torch.nn.CrossEntropyLoss(),
-            dali_iter,
-            valid_iter,
-            epochs=kwargs["epoch"],
-            device=device,
-            dali=True
-        )
-    else:
-        model.train(
-            optimizer,
-            torch.nn.CrossEntropyLoss(),
-            train_data_loader,
-            test_data_loader,
-            epochs=kwargs["epoch"],
-            device=device,
-            dali=False
-        )
+    print("Starting Training")    
+    model.train(
+        optimizer,
+        torch.nn.CrossEntropyLoss(),
+        train_data_loader,
+        test_data_loader,
+        epochs=kwargs["epoch"],
+        device=device,
+        dali=kwargs["nvidiadali"]
+    )
     print("Completed Training")
