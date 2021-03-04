@@ -31,7 +31,7 @@ This repository contains code for pneumonia detection using X-ray images of the 
         - Inception
     - If using colab for training, mount the drive and use --colab to save the files in the drive
     - For faster training and Image augmentation, if on Linux, NVIDIA DALI can be used
-        - Install NVIDIA DALI
+        - Install NVIDIA DALI. Please see the [installation page](https://docs.nvidia.com/deeplearning/dali/user-guide/docs/installation.html) for details.
         - Use --nvidiadali flag to use it
         - Note that NVIDIA DALI is only available for Linux
     - To change optimizers, use one of the following
