@@ -27,9 +27,9 @@ pretrained_models = {
 }
 
 # The main model object
-class CoronaDetection:
+class PneumoniaDetection:
     """
-    Model Architecture and Forward Training Path for the Corona Detection
+    Model Architecture and Forward Training Path for the Pneumonia Detection
     Idea is to use transfer Learning
     """
 
@@ -101,7 +101,6 @@ class CoronaDetection:
             [
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.RandomVerticalFlip(),
-                torchvision.transforms.RandomPerspective(),
                 torchvision.transforms.RandomRotation(25),
                 torchvision.transforms.RandomResizedCrop(
                     pretrained_models[self.base_model][2],
@@ -139,6 +138,7 @@ class CoronaDetection:
         epochs=20,
         early_stopping_threshold=4,
         device="cuda",
+        dali = False
     ):
         """
         Train function:
@@ -171,10 +171,17 @@ class CoronaDetection:
 
             # Training over batches
             self.model.train(mode=True)
-            for train_batch in train_data:
-                train_images, train_labels = train_batch
-                train_images = train_images.to(device)
-                train_labels = train_labels.to(device)
+            for i, train_batch in enumerate(train_data):
+                if dali:
+                    d = train_batch[0]
+                    train_images, train_labels = d["data"], d["label"]
+                    train_images = train_images.permute(0,3,1,2)
+                    train_images = train_images.to(device)
+                    train_labels = train_labels.to(device, dtype=torch.int64).squeeze()
+                else:
+                    train_images, train_labels = train_batch
+                    train_images = train_images.to(device)
+                    train_labels = train_labels.to(device)
 
                 optimizer.zero_grad()
                 train_output = self.model(train_images)
@@ -201,6 +208,9 @@ class CoronaDetection:
                     f"Train Accuracy => "
                     f"{train_ccount/train_images.shape[0]*100:06.2f}"
                 )
+            
+            if dali:
+                train_data.reset()
 
             training_accuracy = train_correct / train_total * 100
 
@@ -216,10 +226,17 @@ class CoronaDetection:
             # Test over batches
             self.model.train(mode=False)
             with torch.no_grad():
-                for test_batch in test_data:
-                    test_images, test_labels = test_batch
-                    test_images = test_images.to(device)
-                    test_labels = test_labels.to(device)
+                for i, test_batch in enumerate(test_data):
+                    if dali:
+                        d = test_batch[0]
+                        test_images, test_labels = d["data"], d["label"]
+                        test_images = test_images.permute(0,3,1,2)
+                        test_images = test_images.to(device)
+                        test_labels = test_labels.to(device, dtype=torch.int64).squeeze()
+                    else:
+                        test_images, test_labels = test_batch
+                        test_images = test_images.to(device)
+                        test_labels = test_labels.to(device)
 
                     test_output = self.model(test_images)
 
@@ -244,6 +261,8 @@ class CoronaDetection:
                 * testing_precision
                 / (testing_recall + testing_precision)
             )
+            if dali:
+                test_data.reset()
 
             sys.stdout.flush()
             sys.stdout.write("\r")
@@ -338,7 +357,7 @@ class CoronaDetection:
                 test_accuracies,
             )
 
-    def test(self, loss_fun, test_data, device="cuda", has_labels=False):
+    def test(self, loss_fun, test_data, device="cuda", has_labels=False, dali=False):
         print("Starting Evaluating....")
         start = time.time()
         self.model.eval()
@@ -353,11 +372,19 @@ class CoronaDetection:
         # Without changing parameters
         with torch.no_grad():
             # Testing over batches
-            for batch in test_data:
-                test_images, test_labels = batch
-                test_images = test_images.to(device)
-                if has_labels:
-                    test_labels = test_labels.to(device)
+            for i, batch in enumerate(test_data):
+                if dali:
+                    d = batch[0]
+                    test_images, test_labels = d["data"], d["label"]
+                    test_images = test_images.permute(0,3,1,2)
+                    test_images = test_images.to(device)
+                    if has_labels:
+                        test_labels = test_labels.to(device, dtype=torch.int64).squeeze()
+                else:
+                    test_images, test_labels = batch
+                    test_images = test_images.to(device)
+                    if has_labels:
+                        test_labels = test_labels.to(device)
 
                 output = self.model(test_images)
                 if has_labels:

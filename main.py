@@ -1,8 +1,10 @@
 import torch
 import torchvision
 import argparse
+from nvidia.dali.plugin.pytorch import DALIClassificationIterator
+from NvidiaDali import *
 
-from model import CoronaDetection
+from model import PneumoniaDetection, pretrained_models
 
 DESCRIPTION = """
 Train the Corona Detection Model
@@ -56,6 +58,13 @@ parser.add_argument(
 parser.add_argument(
     "--epoch", metavar="epoch", type=int, action="store", help="Epoch", default=15
 )
+
+parser.add_argument(
+    "--nvidiadali",
+    action="store_true",
+    help="Option to use when want to use nvidiadali...need to install it before running",
+)
+
 parser.add_argument(
     "--colab",
     action="store_true",
@@ -83,35 +92,56 @@ if __name__ == "__main__":
         device = torch.device("cpu")
 
     print("Creating Model Object: ")
-    model = CoronaDetection(kwargs["base_model"], colab=kwargs["colab"])
+    model = PneumoniaDetection(kwargs["base_model"], colab=kwargs["colab"])
 
-    print("Setting up Data Directories")
     train_data_path = "./data/Corona_Classification_data/train/"
-    train_data = torchvision.datasets.ImageFolder(
-        root=train_data_path, transform=model.train_transformation
-    )
-
     test_data_path = "./data/Corona_Classification_data/test/"
-    test_data = torchvision.datasets.ImageFolder(
-        root=test_data_path, transform=model.test_transformation
-    )
-
     batch_size = kwargs["batch_size"]
-
-    train_data_loader = torch.utils.data.DataLoader(
-        train_data, batch_size=batch_size, shuffle=True
-    )
-    test_data_loader = torch.utils.data.DataLoader(
-        test_data, batch_size=batch_size, shuffle=True
-    )
-
     learning_rate = kwargs["learning_rate"]
+
+    if kwargs["nvidiadali"]:
+        pipe = HybridPipelineTrain(batch_size=batch_size, output_size = list(pretrained_models[kwargs["base_model"]][2]), num_threads=2, device_id=0, images_directory=train_data_path)
+        pipe.build()
+
+        DATA_SIZE = 0   # set this variable manually, equals to total number of files in training
+        VALIDATION_SIZE = 0     # # set this variable manually, equals to total number of files in training
+        ITERATIONS_PER_EPOCH = DATA_SIZE // batch_size
+        VALIDATION_STEPS = VALIDATION_SIZE // batch_size
+
+        assert DATA_SIZE != 0
+        assert VALIDATION_SIZE != 0
+
+        train_data_loader = DALIClassificationIterator([pipe], size=ITERATIONS_PER_EPOCH)
+
+        pipe2 = HybridPipelineTest(batch_size=batch_size, output_size = list(pretrained_models[kwargs["base_model"]][2]), num_threads=2, device_id=0, images_directory=test_data_path)
+        pipe2.build()
+
+        test_data_loader = DALIClassificationIterator([pipe2], size=VALIDATION_STEPS)
+    else:
+        print("Setting up Data Directories")
+        
+        train_data = torchvision.datasets.ImageFolder(
+            root=train_data_path, transform=model.train_transformation
+        )
+        
+        test_data = torchvision.datasets.ImageFolder(
+            root=test_data_path, transform=model.test_transformation
+        )    
+
+        train_data_loader = torch.utils.data.DataLoader(
+            train_data, batch_size=batch_size, shuffle=True
+        )
+        test_data_loader = torch.utils.data.DataLoader(
+            test_data, batch_size=batch_size, shuffle=True
+        )
+
+    
 
     optimizer = optimizers[kwargs["optimizer"]](
         model.model.parameters(), lr=learning_rate
     )
 
-    print("Starting Training")
+    print("Starting Training")    
     model.train(
         optimizer,
         torch.nn.CrossEntropyLoss(),
@@ -119,5 +149,6 @@ if __name__ == "__main__":
         test_data_loader,
         epochs=kwargs["epoch"],
         device=device,
+        dali=kwargs["nvidiadali"]
     )
     print("Completed Training")
